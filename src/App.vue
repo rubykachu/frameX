@@ -115,9 +115,12 @@ const transformerConfig = {
   enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
   rotationSnaps: [0, 90, 180, 270],
   borderStroke: '#0D9488',
+  borderStrokeWidth: 2,
   anchorStroke: '#0D9488',
   anchorFill: '#fff',
   anchorSize: 8,
+  anchorCornerRadius: 4,
+  padding: 8,
   keepRatio: true,
   boundBoxFunc: (oldBox, newBox) => {
     // Prevent scaling smaller than 10px
@@ -127,6 +130,24 @@ const transformerConfig = {
     return newBox
   }
 }
+
+// Update background and avatar config to include selection style
+const getImageConfig = (type, img, x, y, scaleX, scaleY, rotation = 0) => ({
+  image: img,
+  draggable: true,
+  x,
+  y,
+  scaleX,
+  scaleY,
+  rotation,
+  id: type,
+  shadowColor: '#0D9488',
+  shadowBlur: selectedId.value === type ? 10 : 0,
+  shadowOpacity: 0.5,
+  shadowEnabled: true,
+  shadowOffsetX: 0,
+  shadowOffsetY: 0
+})
 
 // Update transformer nodes handler
 const updateTransformerNodes = () => {
@@ -141,6 +162,7 @@ const updateTransformerNodes = () => {
 const handleSelect = (nodeId) => {
   selectedId.value = nodeId
   updateTransformerNodes()
+  updateImageStyles()
 }
 
 // Add deselection handler
@@ -148,6 +170,7 @@ const handleStageClick = (e) => {
   if (e.target === stage.value.getNode()) {
     selectedId.value = null
     updateTransformerNodes()
+    updateImageStyles()
   }
 }
 
@@ -195,14 +218,14 @@ const handleBackgroundUpload = async (file) => {
       stageConfig.height / img.height
     )
 
-    background.config = {
-      image: img,
-      draggable: true,
-      x: (stageConfig.width - img.width * scale) / 2,
-      y: (stageConfig.height - img.height * scale) / 2,
-      scaleX: scale,
-      scaleY: scale
-    }
+    background.config = getImageConfig(
+      'background',
+      img,
+      (stageConfig.width - img.width * scale) / 2,
+      (stageConfig.height - img.height * scale) / 2,
+      scale,
+      scale
+    )
   } catch (error) {
     console.error('Error loading background:', error)
   }
@@ -220,15 +243,14 @@ const handleAvatarUpload = async (file) => {
       maxSize / img.height
     )
 
-    avatar.config = {
-      image: img,
-      draggable: true,
-      x: (stageConfig.width - img.width * scale) / 2,
-      y: (stageConfig.height - img.height * scale) / 2,
-      scaleX: scale,
-      scaleY: scale,
-      rotation: 0
-    }
+    avatar.config = getImageConfig(
+      'avatar',
+      img,
+      (stageConfig.width - img.width * scale) / 2,
+      (stageConfig.height - img.height * scale) / 2,
+      scale,
+      scale
+    )
 
     // Select avatar after upload
     nextTick(() => {
@@ -287,6 +309,16 @@ const handleExport = (format) => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+// Add watch effect for selection
+const updateImageStyles = () => {
+  if (background.config) {
+    background.config.shadowBlur = selectedId.value === 'background' ? 10 : 0
+  }
+  if (avatar.config) {
+    avatar.config.shadowBlur = selectedId.value === 'avatar' ? 10 : 0
+  }
 }
 
 // Lifecycle hooks
