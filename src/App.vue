@@ -35,10 +35,9 @@
                 <!-- Transformer for Avatar -->
                 <v-transformer
                   v-if="avatar.image"
-                  :config="{
-                    ...transformerConfig,
-                    node: stage?.getNode()?.find('#avatar')[0]
-                  }"
+                  ref="transformer"
+                  :config="transformerConfig"
+                  @mounted="updateTransformerNodes"
                 />
                 <!-- Crop Rectangle -->
                 <v-rect
@@ -124,10 +123,14 @@ const cropConfig = reactive({
   fill: 'rgba(0,0,0,0.3)',
   draggable: true,
   strokeScaleEnabled: false,
-  dash: [5, 5]
+  dash: [5, 5],
+  id: 'crop-rect'
 })
 
-// Add transformer config
+// Add ref for transformer
+const transformer = ref(null)
+
+// Update transformer config
 const transformerConfig = {
   enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
   rotationSnaps: [0, 90, 180, 270],
@@ -136,6 +139,15 @@ const transformerConfig = {
   anchorFill: '#fff',
   anchorSize: 8,
   keepRatio: true
+}
+
+// Add watch effect to update transformer nodes
+const updateTransformerNodes = () => {
+  if (!stage.value || !transformer.value) return
+  const node = stage.value.getNode().find('#avatar')[0]
+  if (node) {
+    transformer.value.getNode().nodes([node])
+  }
 }
 
 // Methods
@@ -216,6 +228,11 @@ const handleAvatarUpload = async (file) => {
       scaleY: scale,
       rotation: 0
     }
+
+    // Update transformer after avatar is loaded
+    nextTick(() => {
+      updateTransformerNodes()
+    })
   } catch (error) {
     console.error('Error loading avatar:', error)
   }
@@ -290,10 +307,30 @@ const handleExport = (format) => {
   document.body.removeChild(link)
 }
 
+// Add crop position and transform update methods
+const updateCropPosition = () => {
+  if (!stage.value) return
+  const cropRect = stage.value.getNode().find('#crop-rect')[0]
+  if (!cropRect) return
+
+  cropConfig.x = cropRect.x()
+  cropConfig.y = cropRect.y()
+}
+
+const updateCropTransform = () => {
+  if (!stage.value) return
+  const cropRect = stage.value.getNode().find('#crop-rect')[0]
+  if (!cropRect) return
+
+  cropConfig.width = cropRect.width() * cropRect.scaleX()
+  cropConfig.height = cropRect.height() * cropRect.scaleY()
+}
+
 // Lifecycle hooks
 onMounted(() => {
   updateStageSize()
   window.addEventListener('resize', updateStageSize)
+  updateTransformerNodes()
 })
 
 onUnmounted(() => {
