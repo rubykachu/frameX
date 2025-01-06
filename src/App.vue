@@ -32,6 +32,14 @@
                   @dragend="updatePosition('avatar')"
                   @transformend="updateTransform('avatar')"
                 />
+                <!-- Transformer for Avatar -->
+                <v-transformer
+                  v-if="avatar.image"
+                  :config="{
+                    ...transformerConfig,
+                    node: stage?.getNode()?.find('#avatar')[0]
+                  }"
+                />
                 <!-- Crop Rectangle -->
                 <v-rect
                   v-if="cropConfig.visible"
@@ -119,6 +127,17 @@ const cropConfig = reactive({
   dash: [5, 5]
 })
 
+// Add transformer config
+const transformerConfig = {
+  enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+  rotationSnaps: [0, 90, 180, 270],
+  borderStroke: '#0D9488',
+  anchorStroke: '#0D9488',
+  anchorFill: '#fff',
+  anchorSize: 8,
+  keepRatio: true
+}
+
 // Methods
 const updateStageSize = () => {
   if (!stageContainer.value) return
@@ -204,7 +223,7 @@ const handleAvatarUpload = async (file) => {
 
 const updatePosition = (type) => {
   const node = type === 'background' ? background : avatar
-  const target = type === 'background' ? stage.value.findOne('#background') : stage.value.findOne('#avatar')
+  const target = stage.value.getNode().find(`#${type}`)[0]
   if (!target) return
 
   node.config.x = target.x()
@@ -213,7 +232,7 @@ const updatePosition = (type) => {
 
 const updateTransform = (type) => {
   const node = type === 'background' ? background : avatar
-  const target = type === 'background' ? stage.value.findOne('#background') : stage.value.findOne('#avatar')
+  const target = stage.value.getNode().find(`#${type}`)[0]
   if (!target) return
 
   node.config.scaleX = target.scaleX()
