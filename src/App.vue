@@ -295,14 +295,66 @@ const handleRotate = (direction) => {
 }
 
 const handleExport = (format) => {
-  if (!stage.value) return
+  if (!stage.value || !background.image) return
 
-  const dataUrl = stage.value.getNode().toDataURL({
+  // Create a temporary stage with size of background image
+  const tempStage = new window.Konva.Stage({
+    container: 'temp-container',
+    width: background.image.width,
+    height: background.image.height
+  })
+
+  // Create a temporary layer
+  const tempLayer = new window.Konva.Layer()
+  tempStage.add(tempLayer)
+
+  // Clone the background image
+  const bgNode = stage.value.getNode().find('#background')[0]
+  const bgClone = bgNode.clone({
+    x: 0,
+    y: 0,
+    scaleX: 1,
+    scaleY: 1,
+    width: background.image.width,
+    height: background.image.height
+  })
+  tempLayer.add(bgClone)
+
+  // Clone the avatar if exists and adjust its position relative to background
+  if (avatar.image) {
+    const avatarNode = stage.value.getNode().find('#avatar')[0]
+    const avatarClone = avatarNode.clone()
+
+    // Calculate position relative to background
+    const bgPos = bgNode.getAbsolutePosition()
+    const avatarPos = avatarNode.getAbsolutePosition()
+    const bgScale = bgNode.scaleX()
+
+    avatarClone.setPosition({
+      x: (avatarPos.x - bgPos.x) / bgScale,
+      y: (avatarPos.y - bgPos.y) / bgScale
+    })
+
+    // Scale relative to background
+    avatarClone.scale({
+      x: avatarNode.scaleX() / bgScale,
+      y: avatarNode.scaleY() / bgScale
+    })
+
+    tempLayer.add(avatarClone)
+  }
+
+  // Get data URL from temporary stage
+  const dataUrl = tempStage.toDataURL({
     pixelRatio: 2,
     mimeType: `image/${format}`,
     quality: 1
   })
 
+  // Clean up
+  tempStage.destroy()
+
+  // Create download link
   const link = document.createElement('a')
   link.download = `combined-image.${format}`
   link.href = dataUrl
@@ -323,12 +375,24 @@ const updateImageStyles = () => {
 
 // Lifecycle hooks
 onMounted(() => {
+  // Create temporary container for export
+  const tempContainer = document.createElement('div')
+  tempContainer.id = 'temp-container'
+  tempContainer.style.display = 'none'
+  document.body.appendChild(tempContainer)
+
   updateStageSize()
   window.addEventListener('resize', updateStageSize)
   updateTransformerNodes()
 })
 
 onUnmounted(() => {
+  // Remove temporary container
+  const tempContainer = document.getElementById('temp-container')
+  if (tempContainer) {
+    document.body.removeChild(tempContainer)
+  }
+
   window.removeEventListener('resize', updateStageSize)
 })
 </script>
