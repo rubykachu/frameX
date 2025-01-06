@@ -31,6 +31,7 @@
     <section v-if="hasImages">
       <h3 class="text-lg font-medium mb-4">Transform Controls</h3>
       <div class="space-y-4">
+        <!-- Scale Control -->
         <div>
           <label class="block text-sm font-medium mb-2">Scale: {{ avatarScale.toFixed(1) }}x</label>
           <input
@@ -43,8 +44,46 @@
             class="w-full"
           />
         </div>
+
+        <!-- Crop Controls -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium mb-2">Crop Image</label>
+          <div class="flex space-x-4">
+            <button
+              class="btn flex-1"
+              @click="handleCropBackground"
+              :disabled="isCropping"
+            >
+              Crop Background
+            </button>
+            <button
+              class="btn flex-1"
+              @click="handleCropAvatar"
+              :disabled="isCropping"
+            >
+              Crop Avatar
+            </button>
+          </div>
+          <!-- Crop Action Buttons -->
+          <div v-if="isCropping" class="flex space-x-4 mt-2">
+            <button
+              class="btn btn-primary flex-1"
+              @click="$emit('apply-crop')"
+            >
+              Apply Crop
+            </button>
+            <button
+              class="btn flex-1"
+              @click="$emit('cancel-crop')"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <!-- Rotate Controls -->
         <div class="flex space-x-4">
-          <button class="btn flex-1" @click="handleRotate('left')">
+          <button class="btn flex-1" @click="$emit('rotate', 'left')">
             <span class="flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -52,7 +91,7 @@
               Rotate Left
             </span>
           </button>
-          <button class="btn flex-1" @click="handleRotate('right')">
+          <button class="btn flex-1" @click="$emit('rotate', 'right')">
             <span class="flex items-center justify-center">
               Rotate Right
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +114,10 @@
             <option value="jpeg">JPEG</option>
           </select>
         </div>
-        <button class="btn btn-primary w-full" @click="handleExport">
+        <button
+          class="btn btn-primary w-full"
+          @click="$emit('export', selectedFormat)"
+        >
           Download Image
         </button>
       </div>
@@ -86,27 +128,42 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// Props and emits
+// Props
 const props = defineProps({
-  imageEditor: {
+  background: {
     type: Object,
     required: true
+  },
+  avatar: {
+    type: Object,
+    required: true
+  },
+  isCropping: {
+    type: Boolean,
+    default: false
   }
 })
+
+// Emits
+const emit = defineEmits([
+  'upload-background',
+  'upload-avatar',
+  'update-scale',
+  'rotate',
+  'start-crop',
+  'apply-crop',
+  'cancel-crop',
+  'export'
+])
 
 // Local state
 const backgroundError = ref('')
 const avatarError = ref('')
 const selectedFormat = ref('png')
 
-// Computed properties for imageEditor methods
-const hasImages = computed(() => props.imageEditor.hasImages)
-const avatarScale = computed(() => props.imageEditor.avatarScale)
-const setBackgroundImage = computed(() => props.imageEditor.setBackgroundImage)
-const setAvatarImage = computed(() => props.imageEditor.setAvatarImage)
-const updateAvatarScale = computed(() => props.imageEditor.updateAvatarScale)
-const rotateAvatar = computed(() => props.imageEditor.rotateAvatar)
-const exportImage = computed(() => props.imageEditor.exportImage)
+// Computed
+const hasImages = computed(() => props.background.image && props.avatar.image)
+const avatarScale = computed(() => props.avatar.config?.scaleX || 1)
 
 // Handlers
 const handleBackgroundUpload = async (event) => {
@@ -114,12 +171,7 @@ const handleBackgroundUpload = async (event) => {
   if (!file) return
 
   backgroundError.value = ''
-  if (setBackgroundImage.value) {
-    const success = await setBackgroundImage.value(file)
-    if (!success) {
-      backgroundError.value = 'Failed to load background image. Please ensure it\'s a valid image under 20MB.'
-    }
-  }
+  emit('upload-background', file)
 }
 
 const handleAvatarUpload = async (event) => {
@@ -127,38 +179,18 @@ const handleAvatarUpload = async (event) => {
   if (!file) return
 
   avatarError.value = ''
-  if (setAvatarImage.value) {
-    const success = await setAvatarImage.value(file)
-    if (!success) {
-      avatarError.value = 'Failed to load avatar image. Please ensure it\'s a valid image under 20MB.'
-    }
-  }
+  emit('upload-avatar', file)
 }
 
 const handleScaleChange = (event) => {
-  if (updateAvatarScale.value) {
-    updateAvatarScale.value(Number(event.target.value))
-  }
+  emit('update-scale', Number(event.target.value))
 }
 
-const handleRotate = (direction) => {
-  if (rotateAvatar.value) {
-    rotateAvatar.value(direction)
-  }
+const handleCropBackground = () => {
+  emit('start-crop', 'background')
 }
 
-const handleExport = () => {
-  if (!exportImage.value) return
-
-  const dataUrl = exportImage.value(selectedFormat.value)
-  if (!dataUrl) return
-
-  // Create download link
-  const link = document.createElement('a')
-  link.download = `combined-image.${selectedFormat.value}`
-  link.href = dataUrl
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+const handleCropAvatar = () => {
+  emit('start-crop', 'avatar')
 }
 </script>
