@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-textColor;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg border border-border hover:border-accent transition-colors duration-200;
+  }
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-accent;
+  }
+  .input-file {
+    @apply block w-full text-sm text-textColor
+      file:mr-4 file:py-2 file:px-4
+      file:rounded-lg file:border-0
+      file:text-sm file:font-semibold
+      file:bg-primary file:text-white
+      hover:file:bg-accent;
+  }
+  .card {
+    @apply bg-white rounded-lg shadow-md p-4 border border-border;
+  }
+}
