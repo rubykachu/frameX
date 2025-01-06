@@ -275,9 +275,10 @@ const handleRotate = (direction) => {
 const handleExport = (format) => {
   if (!stage.value) return
 
-  const dataUrl = stage.value.toDataURL({
+  const dataUrl = stage.value.getNode().toDataURL({
     pixelRatio: 2,
-    mimeType: `image/${format}`
+    mimeType: `image/${format}`,
+    quality: 1
   })
 
   const link = document.createElement('a')
