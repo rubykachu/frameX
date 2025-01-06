@@ -13,6 +13,20 @@
               @click="handleStageClick"
             >
               <v-layer ref="layer">
+                <!-- Safe Area Boundary -->
+                <v-rect
+                  :config="{
+                    x: safeArea.x,
+                    y: safeArea.y,
+                    width: safeArea.width,
+                    height: safeArea.height,
+                    stroke: '#0D9488',
+                    strokeWidth: 2,
+                    dash: [10, 5],
+                    listening: false,
+                    strokeScaleEnabled: false
+                  }"
+                />
                 <!-- Background Image -->
                 <v-image
                   v-if="background.image"
@@ -207,6 +221,14 @@ const loadImage = (file) => {
   })
 }
 
+// Add safe area state
+const safeArea = reactive({
+  width: 0,
+  height: 0,
+  x: 0,
+  y: 0
+})
+
 const handleBackgroundUpload = async (file) => {
   try {
     const img = await loadImage(file)
@@ -218,14 +240,24 @@ const handleBackgroundUpload = async (file) => {
       stageConfig.height / img.height
     )
 
+    const x = (stageConfig.width - img.width * scale) / 2
+    const y = (stageConfig.height - img.height * scale) / 2
+
     background.config = getImageConfig(
       'background',
       img,
-      (stageConfig.width - img.width * scale) / 2,
-      (stageConfig.height - img.height * scale) / 2,
+      x,
+      y,
       scale,
       scale
     )
+
+    // Update safe area to match background size and position
+    safeArea.width = img.width * scale
+    safeArea.height = img.height * scale
+    safeArea.x = x
+    safeArea.y = y
+
   } catch (error) {
     console.error('Error loading background:', error)
   }
@@ -320,25 +352,24 @@ const handleExport = (format) => {
   })
   tempLayer.add(bgClone)
 
-  // Clone the avatar if exists and adjust its position relative to background
+  // Clone the avatar if exists and adjust its position relative to safe area
   if (avatar.image) {
     const avatarNode = stage.value.getNode().find('#avatar')[0]
     const avatarClone = avatarNode.clone()
 
-    // Calculate position relative to background
-    const bgPos = bgNode.getAbsolutePosition()
+    // Calculate position relative to safe area
     const avatarPos = avatarNode.getAbsolutePosition()
-    const bgScale = bgNode.scaleX()
+    const safeAreaScale = safeArea.width / background.image.width
 
     avatarClone.setPosition({
-      x: (avatarPos.x - bgPos.x) / bgScale,
-      y: (avatarPos.y - bgPos.y) / bgScale
+      x: (avatarPos.x - safeArea.x) / safeAreaScale,
+      y: (avatarPos.y - safeArea.y) / safeAreaScale
     })
 
-    // Scale relative to background
+    // Scale relative to safe area
     avatarClone.scale({
-      x: avatarNode.scaleX() / bgScale,
-      y: avatarNode.scaleY() / bgScale
+      x: avatarNode.scaleX() / safeAreaScale,
+      y: avatarNode.scaleY() / safeAreaScale
     })
 
     tempLayer.add(avatarClone)
