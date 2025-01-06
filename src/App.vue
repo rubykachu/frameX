@@ -10,6 +10,7 @@
             <v-stage
               ref="stage"
               :config="stageConfig"
+              @click="handleStageClick"
             >
               <v-layer ref="layer">
                 <!-- Background Image -->
@@ -19,6 +20,7 @@
                     ...background.config,
                     id: 'background'
                   }"
+                  @click="handleSelect('background')"
                   @dragend="updatePosition('background')"
                   @transformend="updateTransform('background')"
                 />
@@ -29,22 +31,16 @@
                     ...avatar.config,
                     id: 'avatar'
                   }"
+                  @click="handleSelect('avatar')"
                   @dragend="updatePosition('avatar')"
                   @transformend="updateTransform('avatar')"
                 />
-                <!-- Transformer for Avatar -->
+                <!-- Transformer -->
                 <v-transformer
-                  v-if="avatar.image"
+                  v-if="selectedId"
                   ref="transformer"
                   :config="transformerConfig"
                   @mounted="updateTransformerNodes"
-                />
-                <!-- Crop Rectangle -->
-                <v-rect
-                  v-if="cropConfig.visible"
-                  :config="cropConfig"
-                  @dragend="updateCropPosition"
-                  @transformend="updateCropTransform"
                 />
               </v-layer>
             </v-stage>
@@ -56,14 +52,11 @@
           <ControlPanel
             :background="background"
             :avatar="avatar"
-            :is-cropping="cropConfig.visible"
+            :selected-id="selectedId"
             @upload-background="handleBackgroundUpload"
             @upload-avatar="handleAvatarUpload"
             @update-scale="handleScale"
             @rotate="handleRotate"
-            @start-crop="handleStartCrop"
-            @apply-crop="handleApplyCrop"
-            @cancel-crop="handleCancelCrop"
             @export="handleExport"
           />
         </div>
@@ -111,24 +104,11 @@ const avatar = reactive({
   }
 })
 
-// Crop state
-const cropConfig = reactive({
-  visible: false,
-  x: 0,
-  y: 0,
-  width: 100,
-  height: 100,
-  stroke: '#0D9488',
-  strokeWidth: 2,
-  fill: 'rgba(0,0,0,0.3)',
-  draggable: true,
-  strokeScaleEnabled: false,
-  dash: [5, 5],
-  id: 'crop-rect'
-})
-
 // Add ref for transformer
 const transformer = ref(null)
+
+// Add selected node state
+const selectedId = ref(null)
 
 // Update transformer config
 const transformerConfig = {
@@ -138,15 +118,36 @@ const transformerConfig = {
   anchorStroke: '#0D9488',
   anchorFill: '#fff',
   anchorSize: 8,
-  keepRatio: true
+  keepRatio: true,
+  boundBoxFunc: (oldBox, newBox) => {
+    // Prevent scaling smaller than 10px
+    if (newBox.width < 10 || newBox.height < 10) {
+      return oldBox
+    }
+    return newBox
+  }
 }
 
-// Add watch effect to update transformer nodes
+// Update transformer nodes handler
 const updateTransformerNodes = () => {
-  if (!stage.value || !transformer.value) return
-  const node = stage.value.getNode().find('#avatar')[0]
+  if (!stage.value || !transformer.value || !selectedId.value) return
+  const node = stage.value.getNode().find(`#${selectedId.value}`)[0]
   if (node) {
     transformer.value.getNode().nodes([node])
+  }
+}
+
+// Add selection handler
+const handleSelect = (nodeId) => {
+  selectedId.value = nodeId
+  updateTransformerNodes()
+}
+
+// Add deselection handler
+const handleStageClick = (e) => {
+  if (e.target === stage.value.getNode()) {
+    selectedId.value = null
+    updateTransformerNodes()
   }
 }
 
@@ -229,9 +230,9 @@ const handleAvatarUpload = async (file) => {
       rotation: 0
     }
 
-    // Update transformer after avatar is loaded
+    // Select avatar after upload
     nextTick(() => {
-      updateTransformerNodes()
+      handleSelect('avatar')
     })
   } catch (error) {
     console.error('Error loading avatar:', error)
@@ -271,26 +272,6 @@ const handleRotate = (direction) => {
   avatar.config.rotation = (avatar.config.rotation + rotation) % 360
 }
 
-const handleStartCrop = (type) => {
-  const target = type === 'background' ? background.config : avatar.config
-  if (!target) return
-
-  cropConfig.visible = true
-  cropConfig.x = target.x
-  cropConfig.y = target.y
-  cropConfig.width = target.width * target.scaleX
-  cropConfig.height = target.height * target.scaleY
-}
-
-const handleApplyCrop = () => {
-  // TODO: Implement crop functionality
-  cropConfig.visible = false
-}
-
-const handleCancelCrop = () => {
-  cropConfig.visible = false
-}
-
 const handleExport = (format) => {
   if (!stage.value) return
 
@@ -305,25 +286,6 @@ const handleExport = (format) => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-}
-
-// Add crop position and transform update methods
-const updateCropPosition = () => {
-  if (!stage.value) return
-  const cropRect = stage.value.getNode().find('#crop-rect')[0]
-  if (!cropRect) return
-
-  cropConfig.x = cropRect.x()
-  cropConfig.y = cropRect.y()
-}
-
-const updateCropTransform = () => {
-  if (!stage.value) return
-  const cropRect = stage.value.getNode().find('#crop-rect')[0]
-  if (!cropRect) return
-
-  cropConfig.width = cropRect.width() * cropRect.scaleX()
-  cropConfig.height = cropRect.height() * cropRect.scaleY()
 }
 
 // Lifecycle hooks

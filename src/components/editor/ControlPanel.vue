@@ -32,7 +32,7 @@
       <h3 class="text-lg font-medium mb-4">Transform Controls</h3>
       <div class="space-y-4">
         <!-- Scale Control -->
-        <div>
+        <div v-if="selectedId === 'avatar'">
           <label class="block text-sm font-medium mb-2">Scale: {{ avatarScale.toFixed(1) }}x</label>
           <input
             type="range"
@@ -43,42 +43,6 @@
             @input="handleScaleChange"
             class="w-full"
           />
-        </div>
-
-        <!-- Crop Controls -->
-        <div class="space-y-2">
-          <label class="block text-sm font-medium mb-2">Crop Image</label>
-          <div class="flex space-x-4">
-            <button
-              class="btn flex-1"
-              @click="handleCropBackground"
-              :disabled="isCropping"
-            >
-              Crop Background
-            </button>
-            <button
-              class="btn flex-1"
-              @click="handleCropAvatar"
-              :disabled="isCropping"
-            >
-              Crop Avatar
-            </button>
-          </div>
-          <!-- Crop Action Buttons -->
-          <div v-if="isCropping" class="flex space-x-4 mt-2">
-            <button
-              class="btn btn-primary flex-1"
-              @click="$emit('apply-crop')"
-            >
-              Apply Crop
-            </button>
-            <button
-              class="btn flex-1"
-              @click="$emit('cancel-crop')"
-            >
-              Cancel
-            </button>
-          </div>
         </div>
 
         <!-- Rotate Controls -->
@@ -138,9 +102,9 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  isCropping: {
-    type: Boolean,
-    default: false
+  selectedId: {
+    type: String,
+    default: null
   }
 })
 
@@ -150,9 +114,6 @@ const emit = defineEmits([
   'upload-avatar',
   'update-scale',
   'rotate',
-  'start-crop',
-  'apply-crop',
-  'cancel-crop',
   'export'
 ])
 
@@ -184,13 +145,5 @@ const handleAvatarUpload = async (event) => {
 
 const handleScaleChange = (event) => {
   emit('update-scale', Number(event.target.value))
-}
-
-const handleCropBackground = () => {
-  emit('start-crop', 'background')
-}
-
-const handleCropAvatar = () => {
-  emit('start-crop', 'avatar')
 }
 </script>
