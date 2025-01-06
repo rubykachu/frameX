@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 // Props and emits
 const props = defineProps({
@@ -94,21 +94,19 @@ const props = defineProps({
   }
 })
 
-// Destructure imageEditor
-const {
-  hasImages,
-  avatarScale,
-  setBackgroundImage,
-  setAvatarImage,
-  updateAvatarScale,
-  rotateAvatar,
-  exportImage
-} = props.imageEditor
-
 // Local state
 const backgroundError = ref('')
 const avatarError = ref('')
 const selectedFormat = ref('png')
+
+// Computed properties for imageEditor methods
+const hasImages = computed(() => props.imageEditor.hasImages)
+const avatarScale = computed(() => props.imageEditor.avatarScale)
+const setBackgroundImage = computed(() => props.imageEditor.setBackgroundImage)
+const setAvatarImage = computed(() => props.imageEditor.setAvatarImage)
+const updateAvatarScale = computed(() => props.imageEditor.updateAvatarScale)
+const rotateAvatar = computed(() => props.imageEditor.rotateAvatar)
+const exportImage = computed(() => props.imageEditor.exportImage)
 
 // Handlers
 const handleBackgroundUpload = async (event) => {
@@ -116,9 +114,11 @@ const handleBackgroundUpload = async (event) => {
   if (!file) return
 
   backgroundError.value = ''
-  const success = await setBackgroundImage(file)
-  if (!success) {
-    backgroundError.value = 'Failed to load background image. Please ensure it\'s a valid image under 20MB.'
+  if (setBackgroundImage.value) {
+    const success = await setBackgroundImage.value(file)
+    if (!success) {
+      backgroundError.value = 'Failed to load background image. Please ensure it\'s a valid image under 20MB.'
+    }
   }
 }
 
@@ -127,22 +127,30 @@ const handleAvatarUpload = async (event) => {
   if (!file) return
 
   avatarError.value = ''
-  const success = await setAvatarImage(file)
-  if (!success) {
-    avatarError.value = 'Failed to load avatar image. Please ensure it\'s a valid image under 20MB.'
+  if (setAvatarImage.value) {
+    const success = await setAvatarImage.value(file)
+    if (!success) {
+      avatarError.value = 'Failed to load avatar image. Please ensure it\'s a valid image under 20MB.'
+    }
   }
 }
 
 const handleScaleChange = (event) => {
-  updateAvatarScale(Number(event.target.value))
+  if (updateAvatarScale.value) {
+    updateAvatarScale.value(Number(event.target.value))
+  }
 }
 
 const handleRotate = (direction) => {
-  rotateAvatar(direction)
+  if (rotateAvatar.value) {
+    rotateAvatar.value(direction)
+  }
 }
 
 const handleExport = () => {
-  const dataUrl = exportImage(selectedFormat.value)
+  if (!exportImage.value) return
+
+  const dataUrl = exportImage.value(selectedFormat.value)
   if (!dataUrl) return
 
   // Create download link
