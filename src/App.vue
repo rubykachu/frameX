@@ -6,7 +6,7 @@
       <div class="lg:grid lg:grid-cols-5 lg:gap-8 space-y-6 lg:space-y-0">
         <!-- Canvas Preview -->
         <div class="lg:col-span-3">
-          <CanvasPreview :image-editor="imageEditor" />
+          <CanvasPreview ref="canvasPreviewRef" :image-editor="imageEditor" />
         </div>
 
         <!-- Control Panel -->
@@ -19,10 +19,31 @@
 </template>
 
 <script setup>
+import { ref, onMounted, reactive } from 'vue'
 import Header from './components/layout/Header.vue'
 import CanvasPreview from './components/editor/CanvasPreview.vue'
 import ControlPanel from './components/editor/ControlPanel.vue'
 import { useImageEditor } from './composables/useImageEditor'
 
-const imageEditor = useImageEditor()
+const canvasPreviewRef = ref(null)
+
+// Initialize with default values
+const imageEditor = reactive({
+  hasImages: false,
+  hasBackground: false,
+  canvas: null,
+  setBackgroundImage: () => Promise.resolve(false),
+  setAvatarImage: () => Promise.resolve(false),
+  updateAvatarScale: () => {},
+  rotateAvatar: () => {},
+  exportImage: () => null
+})
+
+onMounted(() => {
+  const canvas = canvasPreviewRef.value.$el.querySelector('canvas')
+  const editor = useImageEditor(canvas)
+
+  // Update the reactive object with real methods
+  Object.assign(imageEditor, editor)
+})
 </script>
