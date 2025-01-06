@@ -9,15 +9,164 @@
       <p class="text-textColor mb-2">No background image selected</p>
       <p class="text-sm text-primary">Upload a background image to start</p>
     </div>
-    <canvas v-else ref="canvas" class="max-w-full max-h-full"></canvas>
+    <canvas
+      v-else
+      ref="canvasRef"
+      @mousedown="startDragging"
+      @mousemove="handleDragging"
+      @mouseup="stopDragging"
+      @mouseleave="stopDragging"
+      @touchstart="startDragging"
+      @touchmove="handleDragging"
+      @touchend="stopDragging"
+      class="max-w-full max-h-full"
+    ></canvas>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useImageEditor } from '../../composables/useImageEditor'
 
-const canvas = ref(null)
-const hasBackground = ref(false)
+// Props and emits
+const props = defineProps({
+  imageEditor: {
+    type: Object,
+    required: true
+  }
+})
 
-// Canvas logic will be implemented in next steps
+// Destructure imageEditor
+const {
+  backgroundImage,
+  avatarImage,
+  avatarPosition,
+  avatarScale,
+  avatarRotation,
+  canvasSize,
+  hasBackground,
+  hasImages,
+  updateAvatarPosition
+} = props.imageEditor
+
+// Canvas refs and state
+const canvasRef = ref(null)
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const dragOffset = ref({ x: 0, y: 0 })
+
+// Drawing functions
+const drawCanvas = () => {
+  const canvas = canvasRef.value
+  if (!canvas || !backgroundImage.value) return
+
+  const ctx = canvas.getContext('2d')
+  const container = canvas.parentElement
+  const containerRatio = container.clientWidth / container.clientHeight
+  const imageRatio = backgroundImage.value.width / backgroundImage.value.height
+
+  // Calculate dimensions to fit container while maintaining aspect ratio
+  let width = container.clientWidth
+  let height = container.clientHeight
+
+  if (containerRatio > imageRatio) {
+    width = height * imageRatio
+  } else {
+    height = width / imageRatio
+  }
+
+  // Set canvas size
+  canvas.width = width
+  canvas.height = height
+
+  // Clear canvas
+  ctx.clearRect(0, 0, width, height)
+
+  // Draw background
+  ctx.drawImage(backgroundImage.value, 0, 0, width, height)
+
+  // Draw avatar if exists
+  if (avatarImage.value) {
+    ctx.save()
+
+    // Calculate scale factor between original and displayed size
+    const scaleFactor = width / canvasSize.value.width
+
+    // Move to avatar position
+    ctx.translate(
+      avatarPosition.value.x * scaleFactor + (avatarImage.value.width * avatarScale.value * scaleFactor) / 2,
+      avatarPosition.value.y * scaleFactor + (avatarImage.value.height * avatarScale.value * scaleFactor) / 2
+    )
+
+    // Apply rotation
+    ctx.rotate((avatarRotation.value * Math.PI) / 180)
+
+    // Apply scale
+    ctx.scale(avatarScale.value * scaleFactor, avatarScale.value * scaleFactor)
+
+    // Draw avatar centered
+    ctx.drawImage(
+      avatarImage.value,
+      -avatarImage.value.width / 2,
+      -avatarImage.value.height / 2
+    )
+
+    ctx.restore()
+  }
+}
+
+// Dragging handlers
+const startDragging = (event) => {
+  if (!hasImages.value) return
+
+  event.preventDefault()
+  isDragging.value = true
+
+  const { clientX, clientY } = event.touches?.[0] ?? event
+  dragStart.value = { x: clientX, y: clientY }
+  dragOffset.value = { ...avatarPosition.value }
+}
+
+const handleDragging = (event) => {
+  if (!isDragging.value) return
+
+  event.preventDefault()
+  const { clientX, clientY } = event.touches?.[0] ?? event
+  const canvas = canvasRef.value
+  const scaleFactor = canvasSize.value.width / canvas.width
+
+  const deltaX = (clientX - dragStart.value.x) * scaleFactor
+  const deltaY = (clientY - dragStart.value.y) * scaleFactor
+
+  updateAvatarPosition(
+    dragOffset.value.x + deltaX,
+    dragOffset.value.y + deltaY
+  )
+
+  drawCanvas()
+}
+
+const stopDragging = () => {
+  isDragging.value = false
+}
+
+// Watch for changes that require redrawing
+watch([backgroundImage, avatarImage, avatarScale, avatarRotation], drawCanvas, { deep: true })
+
+// Handle window resize
+let resizeTimeout
+const handleResize = () => {
+  clearTimeout(resizeTimeout)
+  resizeTimeout = setTimeout(drawCanvas, 100)
+}
+
+// Lifecycle hooks
+onMounted(() => {
+  drawCanvas()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>

@@ -12,6 +12,7 @@
             class="input-file"
             @change="handleBackgroundUpload"
           />
+          <p v-if="backgroundError" class="mt-2 text-sm text-red-500">{{ backgroundError }}</p>
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Avatar Image</label>
@@ -21,6 +22,7 @@
             class="input-file"
             @change="handleAvatarUpload"
           />
+          <p v-if="avatarError" class="mt-2 text-sm text-red-500">{{ avatarError }}</p>
         </div>
       </div>
     </section>
@@ -30,22 +32,33 @@
       <h3 class="text-lg font-medium mb-4">Transform Controls</h3>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-2">Scale</label>
+          <label class="block text-sm font-medium mb-2">Scale: {{ avatarScale.toFixed(1) }}x</label>
           <input
             type="range"
             min="0.1"
             max="2"
             step="0.1"
-            v-model="scale"
+            :value="avatarScale"
+            @input="handleScaleChange"
             class="w-full"
           />
         </div>
         <div class="flex space-x-4">
-          <button class="btn flex-1" @click="rotateLeft">
-            Rotate Left
+          <button class="btn flex-1" @click="handleRotate('left')">
+            <span class="flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Rotate Left
+            </span>
           </button>
-          <button class="btn flex-1" @click="rotateRight">
-            Rotate Right
+          <button class="btn flex-1" @click="handleRotate('right')">
+            <span class="flex items-center justify-center">
+              Rotate Right
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </span>
           </button>
         </div>
       </div>
@@ -57,12 +70,12 @@
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium mb-2">Format</label>
-          <select v-model="exportFormat" class="w-full p-2 border border-border rounded-lg">
+          <select v-model="selectedFormat" class="w-full p-2 border border-border rounded-lg">
             <option value="png">PNG</option>
             <option value="jpeg">JPEG</option>
           </select>
         </div>
-        <button class="btn btn-primary w-full" @click="exportImage">
+        <button class="btn btn-primary w-full" @click="handleExport">
           Download Image
         </button>
       </div>
@@ -73,27 +86,71 @@
 <script setup>
 import { ref } from 'vue'
 
-const hasImages = ref(false)
-const scale = ref(1)
-const exportFormat = ref('png')
+// Props and emits
+const props = defineProps({
+  imageEditor: {
+    type: Object,
+    required: true
+  }
+})
 
-const handleBackgroundUpload = (event) => {
-  // Will implement in next steps
+// Destructure imageEditor
+const {
+  hasImages,
+  avatarScale,
+  setBackgroundImage,
+  setAvatarImage,
+  updateAvatarScale,
+  rotateAvatar,
+  exportImage
+} = props.imageEditor
+
+// Local state
+const backgroundError = ref('')
+const avatarError = ref('')
+const selectedFormat = ref('png')
+
+// Handlers
+const handleBackgroundUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  backgroundError.value = ''
+  const success = await setBackgroundImage(file)
+  if (!success) {
+    backgroundError.value = 'Failed to load background image. Please ensure it\'s a valid image under 20MB.'
+  }
 }
 
-const handleAvatarUpload = (event) => {
-  // Will implement in next steps
+const handleAvatarUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  avatarError.value = ''
+  const success = await setAvatarImage(file)
+  if (!success) {
+    avatarError.value = 'Failed to load avatar image. Please ensure it\'s a valid image under 20MB.'
+  }
 }
 
-const rotateLeft = () => {
-  // Will implement in next steps
+const handleScaleChange = (event) => {
+  updateAvatarScale(Number(event.target.value))
 }
 
-const rotateRight = () => {
-  // Will implement in next steps
+const handleRotate = (direction) => {
+  rotateAvatar(direction)
 }
 
-const exportImage = () => {
-  // Will implement in next steps
+const handleExport = () => {
+  const dataUrl = exportImage(selectedFormat.value)
+  if (!dataUrl) return
+
+  // Create download link
+  const link = document.createElement('a')
+  link.download = `combined-image.${selectedFormat.value}`
+  link.href = dataUrl
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 </script>

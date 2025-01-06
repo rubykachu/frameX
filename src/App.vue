@@ -6,12 +6,12 @@
       <div class="lg:grid lg:grid-cols-5 lg:gap-8 space-y-6 lg:space-y-0">
         <!-- Canvas Preview -->
         <div class="lg:col-span-3">
-          <CanvasPreview />
+          <CanvasPreview :image-editor="imageEditor" />
         </div>
 
         <!-- Control Panel -->
         <div class="lg:col-span-2">
-          <ControlPanel />
+          <ControlPanel :image-editor="imageEditor" />
         </div>
       </div>
     </main>
@@ -22,4 +22,7 @@
 import Header from './components/layout/Header.vue'
 import CanvasPreview from './components/editor/CanvasPreview.vue'
 import ControlPanel from './components/editor/ControlPanel.vue'
+import { useImageEditor } from './composables/useImageEditor'
+
+const imageEditor = useImageEditor()
 </script>
