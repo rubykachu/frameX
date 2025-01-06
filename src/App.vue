@@ -15,14 +15,20 @@
                 <!-- Background Image -->
                 <v-image
                   v-if="background.image"
-                  :config="background.config"
+                  :config="{
+                    ...background.config,
+                    id: 'background'
+                  }"
                   @dragend="updatePosition('background')"
                   @transformend="updateTransform('background')"
                 />
                 <!-- Avatar Image -->
                 <v-image
                   v-if="avatar.image"
-                  :config="avatar.config"
+                  :config="{
+                    ...avatar.config,
+                    id: 'avatar'
+                  }"
                   @dragend="updatePosition('avatar')"
                   @transformend="updateTransform('avatar')"
                 />
@@ -197,19 +203,23 @@ const handleAvatarUpload = async (file) => {
 }
 
 const updatePosition = (type) => {
-  const node = type === 'background' ? background.config : avatar.config
-  const pos = node.getPosition()
-  node.x = pos.x
-  node.y = pos.y
+  const node = type === 'background' ? background : avatar
+  const target = type === 'background' ? stage.value.findOne('#background') : stage.value.findOne('#avatar')
+  if (!target) return
+
+  node.config.x = target.x()
+  node.config.y = target.y()
 }
 
 const updateTransform = (type) => {
-  const node = type === 'background' ? background.config : avatar.config
-  const transform = node.getTransform()
-  node.scaleX = transform.scaleX
-  node.scaleY = transform.scaleY
+  const node = type === 'background' ? background : avatar
+  const target = type === 'background' ? stage.value.findOne('#background') : stage.value.findOne('#avatar')
+  if (!target) return
+
+  node.config.scaleX = target.scaleX()
+  node.config.scaleY = target.scaleY()
   if (type === 'avatar') {
-    node.rotation = transform.rotation
+    node.config.rotation = target.rotation()
   }
 }
 
