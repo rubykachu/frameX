@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import Header from './components/layout/Header.vue'
 import ControlPanel from './components/editor/ControlPanel.vue'
 
