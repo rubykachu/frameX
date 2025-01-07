@@ -95,8 +95,8 @@
         <!-- Controls -->
         <div class="space-y-6">
           <!-- Scale Control -->
-          <div class="flex items-center space-x-4 px-4">
-            <button class="p-2 text-gray-600 hover:text-gray-900">
+          <div v-if="avatar.image" class="flex items-center space-x-4 px-4">
+            <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.max(0.1, avatarScale - 0.1) }})">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
               </svg>
@@ -110,7 +110,7 @@
               :value="avatarScale"
               @input="handleScale"
             />
-            <button class="p-2 text-gray-600 hover:text-gray-900">
+            <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.min(2, avatarScale + 0.1) }})">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -120,6 +120,14 @@
           <!-- Action Buttons -->
           <div class="flex justify-center space-x-4">
             <button
+              v-if="!background.image"
+              class="btn btn-secondary"
+              @click="handleUploadFrame"
+            >
+              Chọn khung
+            </button>
+            <button
+              v-if="background.image && !avatar.image"
               class="btn btn-secondary"
               @click="handleUploadAvatar"
             >
@@ -147,7 +155,7 @@
               </button>
             </template>
             <button
-              v-if="avatar.image && !cropMode"
+              v-if="avatar.image && background.image && !cropMode"
               class="btn btn-primary"
               @click="handleExport('png')"
             >
@@ -155,7 +163,14 @@
             </button>
           </div>
 
-          <!-- Hidden File Input -->
+          <!-- Hidden File Inputs -->
+          <input
+            type="file"
+            ref="frameInput"
+            class="hidden"
+            accept="image/png,image/jpeg"
+            @change="onFrameFileSelected"
+          />
           <input
             type="file"
             ref="avatarInput"
@@ -320,60 +335,102 @@ const safeArea = reactive({
   y: 0
 })
 
+// Add refs
+const frameInput = ref(null)
+const stage = ref(null)
+const stageContainer = ref(null)
+const layer = ref(null)
+const maskLayer = ref(null)
+
+// Add crop state
+const cropMode = ref(false)
+const cropConfig = reactive({
+  visible: false,
+  x: 0,
+  y: 0,
+  width: FB_AVATAR_SIZE,
+  height: FB_AVATAR_SIZE,
+  stroke: '#0D9488',
+  strokeWidth: 2,
+  fill: 'rgba(0,0,0,0.3)',
+  draggable: true,
+  keepRatio: true
+})
+
+// Add frame upload methods
+const handleUploadFrame = () => {
+  frameInput.value?.click()
+}
+
+const onFrameFileSelected = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  try {
+    await handleBackgroundUpload(file)
+    event.target.value = ''
+  } catch (error) {
+    console.error('Error uploading frame:', error)
+  }
+}
+
+// Update handleBackgroundUpload to handle frame better
 const handleBackgroundUpload = async (file) => {
   try {
     const img = await loadImage(file)
     background.image = img
 
-    // Calculate scale to fit stage
-    const scale = Math.min(
-      stageConfig.width / img.width,
-      stageConfig.height / img.height
-    )
+    // Calculate scale to fit stage while maintaining aspect ratio
+    const containerSize = Math.min(stageConfig.width, stageConfig.height)
+    const scale = containerSize / Math.max(img.width, img.height)
 
+    // Center the frame
     const x = (stageConfig.width - img.width * scale) / 2
     const y = (stageConfig.height - img.height * scale) / 2
 
-    background.config = getImageConfig(
-      'background',
-      img,
+    background.config = {
+      image: img,
+      draggable: false,
       x,
       y,
-      scale,
-      scale
-    )
+      scaleX: scale,
+      scaleY: scale
+    }
 
-    // Update safe area to match background size and position
-    safeArea.width = img.width * scale
-    safeArea.height = img.height * scale
-    safeArea.x = x
-    safeArea.y = y
+    // Update safe area to match frame size
+    safeArea.width = containerSize
+    safeArea.height = containerSize
+    safeArea.x = (stageConfig.width - containerSize) / 2
+    safeArea.y = (stageConfig.height - containerSize) / 2
 
   } catch (error) {
-    console.error('Error loading background:', error)
+    console.error('Error loading frame:', error)
   }
 }
 
+// Update handleAvatarUpload to center in safe area
 const handleAvatarUpload = async (file) => {
   try {
     const img = await loadImage(file)
     avatar.image = img
 
-    // Set initial size (30% of stage width)
-    const maxSize = stageConfig.width * 0.3
-    const scale = Math.min(
-      maxSize / img.width,
-      maxSize / img.height
-    )
+    // Set initial size (70% of safe area)
+    const maxSize = Math.min(safeArea.width, safeArea.height) * 0.7
+    const scale = maxSize / Math.max(img.width, img.height)
 
-    avatar.config = getImageConfig(
-      'avatar',
-      img,
-      (stageConfig.width - img.width * scale) / 2,
-      (stageConfig.height - img.height * scale) / 2,
-      scale,
-      scale
-    )
+    // Center in safe area
+    const x = safeArea.x + (safeArea.width - img.width * scale) / 2
+    const y = safeArea.y + (safeArea.height - img.height * scale) / 2
+
+    avatar.config = {
+      image: img,
+      draggable: true,
+      x,
+      y,
+      scaleX: scale,
+      scaleY: scale,
+      rotation: 0
+    }
 
     // Select avatar after upload
     nextTick(() => {
@@ -405,12 +462,37 @@ const updateTransform = (type) => {
   }
 }
 
+// Update scale handler to scale from center
 const handleScale = (event) => {
   const scale = Number(event.target.value)
   if (!avatar.config || isNaN(scale)) return
 
-  avatar.config.scaleX = scale
-  avatar.config.scaleY = scale
+  const oldScale = avatar.config.scaleX
+  const newScale = scale
+
+  // Get center of safe area
+  const centerX = safeArea.x + safeArea.width / 2
+  const centerY = safeArea.y + safeArea.height / 2
+
+  // Calculate new position to maintain center point
+  const currentX = avatar.config.x
+  const currentY = avatar.config.y
+  const imgCenterX = currentX + (avatar.image.width * oldScale) / 2
+  const imgCenterY = currentY + (avatar.image.height * oldScale) / 2
+
+  // Calculate offset from center
+  const offsetX = imgCenterX - centerX
+  const offsetY = imgCenterY - centerY
+
+  // Scale the offset
+  const newOffsetX = (offsetX * newScale) / oldScale
+  const newOffsetY = (offsetY * newScale) / oldScale
+
+  // Update position and scale
+  avatar.config.scaleX = newScale
+  avatar.config.scaleY = newScale
+  avatar.config.x = centerX + newOffsetX - (avatar.image.width * newScale) / 2
+  avatar.config.y = centerY + newOffsetY - (avatar.image.height * newScale) / 2
 }
 
 const handleRotate = (direction) => {
@@ -515,27 +597,6 @@ const onAvatarFileSelected = async (event) => {
     console.error('Error uploading avatar:', error)
   }
 }
-
-// Add missing refs
-const stage = ref(null)
-const stageContainer = ref(null)
-const layer = ref(null)
-const maskLayer = ref(null)
-
-// Add crop state
-const cropMode = ref(false)
-const cropConfig = reactive({
-  visible: false,
-  x: 0,
-  y: 0,
-  width: FB_AVATAR_SIZE,
-  height: FB_AVATAR_SIZE,
-  stroke: '#0D9488',
-  strokeWidth: 2,
-  fill: 'rgba(0,0,0,0.3)',
-  draggable: true,
-  keepRatio: true
-})
 
 // Add crop methods
 const startCrop = () => {
