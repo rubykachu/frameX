@@ -3,75 +3,165 @@
     <Header />
 
     <main class="container mx-auto px-4 py-8">
-      <div class="lg:grid lg:grid-cols-5 lg:gap-8 space-y-6 lg:space-y-0">
-        <!-- Canvas Preview -->
-        <div class="lg:col-span-3">
-          <div class="card h-full min-h-[400px]" ref="stageContainer">
+      <!-- Editor Container -->
+      <div class="max-w-2xl mx-auto">
+        <!-- Canvas Container -->
+        <div class="relative aspect-square bg-gray-100 rounded-lg mb-6">
+          <div class="absolute inset-0" ref="stageContainer">
             <v-stage
               ref="stage"
               :config="stageConfig"
               @click="handleStageClick"
             >
+              <!-- Main Layer (Avatar) -->
               <v-layer ref="layer">
-                <!-- Safe Area Boundary -->
-                <v-rect
-                  :config="{
-                    x: safeArea.x,
-                    y: safeArea.y,
-                    width: safeArea.width,
-                    height: safeArea.height,
-                    stroke: '#0D9488',
-                    strokeWidth: 2,
-                    dash: [10, 5],
-                    listening: false,
-                    strokeScaleEnabled: false
-                  }"
-                />
-                <!-- Background Image -->
-                <v-image
-                  v-if="background.image"
-                  :config="{
-                    ...background.config,
-                    id: 'background'
-                  }"
-                  @click="handleSelect('background')"
-                  @dragend="updatePosition('background')"
-                  @transformend="updateTransform('background')"
-                />
                 <!-- Avatar Image -->
                 <v-image
                   v-if="avatar.image"
                   :config="{
                     ...avatar.config,
-                    id: 'avatar'
+                    id: 'avatar',
+                    draggable: !cropMode
                   }"
-                  @click="handleSelect('avatar')"
                   @dragend="updatePosition('avatar')"
                   @transformend="updateTransform('avatar')"
                 />
-                <!-- Transformer -->
+                <!-- Frame Image -->
+                <v-image
+                  v-if="background.image"
+                  :config="{
+                    ...background.config,
+                    id: 'frame',
+                    draggable: false,
+                    listening: false
+                  }"
+                />
+                <!-- Crop Rectangle -->
                 <v-transformer
-                  v-if="selectedId"
-                  ref="transformer"
-                  :config="transformerConfig"
-                  @mounted="updateTransformerNodes"
+                  v-if="cropMode"
+                  ref="cropTransformer"
+                  :config="{
+                    ...transformerConfig,
+                    enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+                    boundBoxFunc: (oldBox, newBox) => {
+                      // Ensure minimum size
+                      if (newBox.width < 50 || newBox.height < 50) {
+                        return oldBox
+                      }
+                      return newBox
+                    }
+                  }"
+                />
+                <v-rect
+                  v-if="cropMode"
+                  :config="{
+                    ...cropConfig,
+                    id: 'crop'
+                  }"
+                  @dragend="updateCropPosition"
+                  @transformend="updateCropTransform"
+                />
+              </v-layer>
+
+              <!-- Mask Layer -->
+              <v-layer ref="maskLayer">
+                <!-- Dark Overlay -->
+                <v-rect
+                  :config="{
+                    x: 0,
+                    y: 0,
+                    width: stageConfig.width,
+                    height: stageConfig.height,
+                    fill: 'rgba(0,0,0,0.6)',
+                    listening: false
+                  }"
+                />
+                <!-- Circle Cutout -->
+                <v-circle
+                  :config="{
+                    x: stageConfig.width / 2,
+                    y: stageConfig.height / 2,
+                    radius: Math.min(safeArea.width, safeArea.height) / 2,
+                    fill: 'black',
+                    globalCompositeOperation: 'destination-out',
+                    listening: false
+                  }"
                 />
               </v-layer>
             </v-stage>
           </div>
         </div>
 
-        <!-- Control Panel -->
-        <div class="lg:col-span-2">
-          <ControlPanel
-            :background="background"
-            :avatar="avatar"
-            :selected-id="selectedId"
-            @upload-background="handleBackgroundUpload"
-            @upload-avatar="handleAvatarUpload"
-            @update-scale="handleScale"
-            @rotate="handleRotate"
-            @export="handleExport"
+        <!-- Controls -->
+        <div class="space-y-6">
+          <!-- Scale Control -->
+          <div class="flex items-center space-x-4 px-4">
+            <button class="p-2 text-gray-600 hover:text-gray-900">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              </svg>
+            </button>
+            <input
+              type="range"
+              min="0.1"
+              max="2"
+              step="0.01"
+              class="w-full"
+              :value="avatarScale"
+              @input="handleScale"
+            />
+            <button class="p-2 text-gray-600 hover:text-gray-900">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-center space-x-4">
+            <button
+              class="btn btn-secondary"
+              @click="handleUploadAvatar"
+            >
+              Chọn ảnh
+            </button>
+            <button
+              v-if="avatar.image && !cropMode"
+              class="btn btn-secondary"
+              @click="startCrop"
+            >
+              Cắt ảnh
+            </button>
+            <template v-if="cropMode">
+              <button
+                class="btn btn-primary"
+                @click="applyCrop"
+              >
+                Xác nhận
+              </button>
+              <button
+                class="btn btn-secondary"
+                @click="cancelCrop"
+              >
+                Huỷ
+              </button>
+            </template>
+            <button
+              v-if="avatar.image && !cropMode"
+              class="btn btn-primary"
+              @click="handleExport('png')"
+            >
+              Tải về
+            </button>
+          </div>
+
+          <!-- Hidden File Input -->
+          <input
+            type="file"
+            ref="avatarInput"
+            class="hidden"
+            accept="image/png,image/jpeg"
+            @change="onAvatarFileSelected"
           />
         </div>
       </div>
@@ -80,18 +170,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, computed, watch } from 'vue'
 import Header from './components/layout/Header.vue'
 import ControlPanel from './components/editor/ControlPanel.vue'
 
-// Stage configuration
-const stageContainer = ref(null)
-const stage = ref(null)
-const layer = ref(null)
+// Constants for Facebook avatar dimensions
+const FB_AVATAR_SIZE = 500 // Facebook recommends 500x500px
 
+// Stage configuration
 const stageConfig = reactive({
-  width: 800,
-  height: 400
+  width: FB_AVATAR_SIZE,
+  height: FB_AVATAR_SIZE
 })
 
 // Image states
@@ -160,7 +249,9 @@ const getImageConfig = (type, img, x, y, scaleX, scaleY, rotation = 0) => ({
   shadowOpacity: 0.5,
   shadowEnabled: true,
   shadowOffsetX: 0,
-  shadowOffsetY: 0
+  shadowOffsetY: 0,
+  stroke: selectedId.value === type ? '#0D9488' : undefined,
+  strokeWidth: selectedId.value === type ? 2 : 0
 })
 
 // Update transformer nodes handler
@@ -223,8 +314,8 @@ const loadImage = (file) => {
 
 // Add safe area state
 const safeArea = reactive({
-  width: 0,
-  height: 0,
+  width: FB_AVATAR_SIZE,
+  height: FB_AVATAR_SIZE,
   x: 0,
   y: 0
 })
@@ -314,8 +405,10 @@ const updateTransform = (type) => {
   }
 }
 
-const handleScale = (scale) => {
-  if (!avatar.config) return
+const handleScale = (event) => {
+  const scale = Number(event.target.value)
+  if (!avatar.config || isNaN(scale)) return
+
   avatar.config.scaleX = scale
   avatar.config.scaleY = scale
 }
@@ -327,55 +420,42 @@ const handleRotate = (direction) => {
 }
 
 const handleExport = (format) => {
-  if (!stage.value || !background.image) return
+  if (!stage.value || !background.image || !avatar.image) return
 
-  // Create a temporary stage with size of background image
+  // Create a temporary stage with Facebook avatar dimensions
   const tempStage = new window.Konva.Stage({
     container: 'temp-container',
-    width: background.image.width,
-    height: background.image.height
+    width: FB_AVATAR_SIZE,
+    height: FB_AVATAR_SIZE
   })
 
   // Create a temporary layer
   const tempLayer = new window.Konva.Layer()
   tempStage.add(tempLayer)
 
-  // Clone the background image
-  const bgNode = stage.value.getNode().find('#background')[0]
-  const bgClone = bgNode.clone({
+  // Clone and position the avatar
+  const avatarNode = stage.value.getNode().find('#avatar')[0]
+  const avatarClone = avatarNode.clone({
+    x: (avatarNode.x() - safeArea.x) * (FB_AVATAR_SIZE / safeArea.width),
+    y: (avatarNode.y() - safeArea.y) * (FB_AVATAR_SIZE / safeArea.height),
+    scaleX: avatarNode.scaleX() * (FB_AVATAR_SIZE / safeArea.width),
+    scaleY: avatarNode.scaleY() * (FB_AVATAR_SIZE / safeArea.height)
+  })
+  tempLayer.add(avatarClone)
+
+  // Add the frame on top
+  const frameNode = stage.value.getNode().find('#frame')[0]
+  const frameClone = frameNode.clone({
     x: 0,
     y: 0,
+    width: FB_AVATAR_SIZE,
+    height: FB_AVATAR_SIZE,
     scaleX: 1,
-    scaleY: 1,
-    width: background.image.width,
-    height: background.image.height
+    scaleY: 1
   })
-  tempLayer.add(bgClone)
+  tempLayer.add(frameClone)
 
-  // Clone the avatar if exists and adjust its position relative to safe area
-  if (avatar.image) {
-    const avatarNode = stage.value.getNode().find('#avatar')[0]
-    const avatarClone = avatarNode.clone()
-
-    // Calculate position relative to safe area
-    const avatarPos = avatarNode.getAbsolutePosition()
-    const safeAreaScale = safeArea.width / background.image.width
-
-    avatarClone.setPosition({
-      x: (avatarPos.x - safeArea.x) / safeAreaScale,
-      y: (avatarPos.y - safeArea.y) / safeAreaScale
-    })
-
-    // Scale relative to safe area
-    avatarClone.scale({
-      x: avatarNode.scaleX() / safeAreaScale,
-      y: avatarNode.scaleY() / safeAreaScale
-    })
-
-    tempLayer.add(avatarClone)
-  }
-
-  // Get data URL from temporary stage
+  // Get data URL
   const dataUrl = tempStage.toDataURL({
     pixelRatio: 2,
     mimeType: `image/${format}`,
@@ -385,9 +465,9 @@ const handleExport = (format) => {
   // Clean up
   tempStage.destroy()
 
-  // Create download link
+  // Download
   const link = document.createElement('a')
-  link.download = `combined-image.${format}`
+  link.download = `avatar-with-frame.${format}`
   link.href = dataUrl
   document.body.appendChild(link)
   link.click()
@@ -398,11 +478,149 @@ const handleExport = (format) => {
 const updateImageStyles = () => {
   if (background.config) {
     background.config.shadowBlur = selectedId.value === 'background' ? 10 : 0
+    background.config.stroke = selectedId.value === 'background' ? '#0D9488' : undefined
+    background.config.strokeWidth = selectedId.value === 'background' ? 2 : 0
   }
   if (avatar.config) {
     avatar.config.shadowBlur = selectedId.value === 'avatar' ? 10 : 0
+    avatar.config.stroke = selectedId.value === 'avatar' ? '#0D9488' : undefined
+    avatar.config.strokeWidth = selectedId.value === 'avatar' ? 2 : 0
   }
 }
+
+// Add refs for new layers
+const bgLayer = ref(null)
+const borderLayer = ref(null)
+
+// File input ref
+const avatarInput = ref(null)
+
+// Computed
+const avatarScale = computed(() => avatar.config?.scaleX || 1)
+
+// Methods
+const handleUploadAvatar = () => {
+  avatarInput.value?.click()
+}
+
+const onAvatarFileSelected = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  try {
+    await handleAvatarUpload(file)
+    // Reset input so the same file can be selected again
+    event.target.value = ''
+  } catch (error) {
+    console.error('Error uploading avatar:', error)
+  }
+}
+
+// Add missing refs
+const stage = ref(null)
+const stageContainer = ref(null)
+const layer = ref(null)
+const maskLayer = ref(null)
+
+// Add crop state
+const cropMode = ref(false)
+const cropConfig = reactive({
+  visible: false,
+  x: 0,
+  y: 0,
+  width: FB_AVATAR_SIZE,
+  height: FB_AVATAR_SIZE,
+  stroke: '#0D9488',
+  strokeWidth: 2,
+  fill: 'rgba(0,0,0,0.3)',
+  draggable: true,
+  keepRatio: true
+})
+
+// Add crop methods
+const startCrop = () => {
+  if (!avatar.image) return
+
+  cropMode.value = true
+  const node = stage.value.getNode().find('#avatar')[0]
+
+  cropConfig.x = node.x()
+  cropConfig.y = node.y()
+  cropConfig.width = node.width() * node.scaleX()
+  cropConfig.height = node.height() * node.scaleY()
+  cropConfig.visible = true
+}
+
+const applyCrop = () => {
+  if (!avatar.image || !cropMode.value) return
+
+  const avatarNode = stage.value.getNode().find('#avatar')[0]
+  const cropNode = stage.value.getNode().find('#crop')[0]
+
+  // Create temporary canvas for cropping
+  const tempCanvas = document.createElement('canvas')
+  const ctx = tempCanvas.getContext('2d')
+
+  // Set canvas size to crop size
+  tempCanvas.width = cropConfig.width
+  tempCanvas.height = cropConfig.height
+
+  // Draw cropped portion
+  ctx.drawImage(
+    avatarNode.image(),
+    (cropConfig.x - avatarNode.x()) / avatarNode.scaleX(),
+    (cropConfig.y - avatarNode.y()) / avatarNode.scaleY(),
+    cropConfig.width / avatarNode.scaleX(),
+    cropConfig.height / avatarNode.scaleY(),
+    0, 0,
+    cropConfig.width,
+    cropConfig.height
+  )
+
+  // Create new image from cropped canvas
+  const croppedImage = new Image()
+  croppedImage.onload = () => {
+    avatar.image = croppedImage
+    avatar.config = {
+      ...avatar.config,
+      image: croppedImage,
+      x: cropConfig.x,
+      y: cropConfig.y,
+      scaleX: 1,
+      scaleY: 1
+    }
+
+    // Reset crop mode
+    cropMode.value = false
+    cropConfig.visible = false
+  }
+  croppedImage.src = tempCanvas.toDataURL()
+}
+
+const cancelCrop = () => {
+  cropMode.value = false
+  cropConfig.visible = false
+}
+
+// Add crop position update methods
+const updateCropPosition = () => {
+  const cropNode = stage.value.getNode().find('#crop')[0]
+  if (!cropNode) return
+
+  cropConfig.x = cropNode.x()
+  cropConfig.y = cropNode.y()
+}
+
+const updateCropTransform = () => {
+  const cropNode = stage.value.getNode().find('#crop')[0]
+  if (!cropNode) return
+
+  cropConfig.width = cropNode.width() * cropNode.scaleX()
+  cropConfig.height = cropNode.height() * cropNode.scaleY()
+}
+
+// Add crop transformer ref
+const cropTransformer = ref(null)
 
 // Lifecycle hooks
 onMounted(() => {
@@ -415,6 +633,18 @@ onMounted(() => {
   updateStageSize()
   window.addEventListener('resize', updateStageSize)
   updateTransformerNodes()
+
+  // Update crop transformer when crop mode changes
+  watch(cropMode, (newValue) => {
+    if (newValue) {
+      nextTick(() => {
+        const cropNode = stage.value.getNode().find('#crop')[0]
+        if (cropNode && cropTransformer.value) {
+          cropTransformer.value.getNode().nodes([cropNode])
+        }
+      })
+    }
+  })
 })
 
 onUnmounted(() => {
@@ -427,3 +657,73 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateStageSize)
 })
 </script>
+
+<style>
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-colors;
+}
+
+.btn-primary {
+  @apply bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Custom range input styling */
+input[type="range"] {
+  @apply h-2 rounded-lg bg-gray-200;
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  @apply w-6 h-6 rounded-full bg-teal-600 cursor-pointer shadow-md;
+  -webkit-appearance: none;
+  margin-top: -8px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  @apply w-6 h-6 rounded-full bg-teal-600 cursor-pointer shadow-md border-0;
+}
+
+input[type="range"]:focus {
+  @apply outline-none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  @apply ring-4 ring-teal-200;
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+  @apply ring-4 ring-teal-200;
+}
+
+/* Disable avatar dragging during crop */
+.crop-mode .avatar {
+  pointer-events: none;
+}
+
+/* Container styles */
+.canvas-container {
+  @apply bg-white rounded-xl shadow-lg overflow-hidden;
+}
+
+/* Button group styles */
+.button-group {
+  @apply flex justify-center space-x-4 mt-6;
+}
+
+.button-group button {
+  @apply min-w-[100px];
+}
+
+/* Scale control styles */
+.scale-control {
+  @apply flex items-center space-x-4 px-6 py-4 bg-white rounded-lg shadow-md;
+}
+
+.scale-control button {
+  @apply p-2 text-gray-600 hover:text-gray-900 transition-colors;
+}
+</style>
