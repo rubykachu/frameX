@@ -1,148 +1,221 @@
 <template>
-  <div class="relative aspect-square bg-gray-100 rounded-lg mb-4 flex-1 border border-gray-100">
-    <div class="absolute inset-0" ref="stageContainer">
-      <v-stage
-        ref="stage"
-        :config="stageConfig"
-        @click="handleStageClick"
-        @mousedown="handleMouseDown"
-        @touchstart="handleTouchStart"
-      >
-        <!-- Main Layer (Avatar) -->
-        <v-layer ref="layer">
-          <!-- Avatar Image -->
-          <v-image
-            v-if="avatar.image"
-            :config="{
-              ...avatar.config,
-              id: 'avatar',
-              draggable: true,
-              x: avatar.config.x,
-              y: avatar.config.y,
-              scaleX: avatar.config.scaleX,
-              scaleY: avatar.config.scaleY,
-              rotation: avatar.config.rotation || 0
-            }"
-            @dragstart="handleDragStart"
-            @dragmove="handleDragMove('avatar')"
-            @dragend="updatePosition('avatar')"
-            @transformstart="handleTransformStart"
-            @transformend="handleTransform('avatar')"
-            @click="handleNodeClick"
-          />
+  <!-- Layout Container -->
+  <div class="flex gap-4">
+    <!-- Canvas Area -->
+    <div class="relative aspect-square bg-gray-100 rounded-lg flex-1 border border-gray-100">
+      <div class="absolute inset-0" ref="stageContainer">
+        <v-stage
+          ref="stage"
+          :config="stageConfig"
+          @click="handleStageClick"
+          @mousedown="handleMouseDown"
+          @touchstart="handleTouchStart"
+        >
+          <v-layer ref="mainLayer">
+            <!-- Avatar Image (Below) -->
+            <v-image
+              v-if="avatar.image"
+              :config="{
+                ...avatar.config,
+                id: 'avatar',
+                draggable: selectedId === 'avatar',
+                listening: selectedId === 'avatar',
+                x: avatar.config.x,
+                y: avatar.config.y,
+                scaleX: avatar.config.scaleX,
+                scaleY: avatar.config.scaleY,
+                rotation: avatar.config.rotation || 0
+              }"
+              @dragstart="handleDragStart"
+              @dragmove="handleDragMove('avatar')"
+              @dragend="updatePosition('avatar')"
+              @transformstart="handleTransformStart"
+              @transformend="handleTransform('avatar')"
+            />
 
-          <!-- Frame Image -->
-          <v-image
-            v-if="background.image"
-            :config="{
-              ...background.config,
-              id: 'frame',
-              draggable: true,
-              listening: true
-            }"
-            @dragstart="handleDragStart"
-            @dragmove="handleDragMove('frame')"
-            @dragend="updatePosition('frame')"
-            @transformstart="handleTransformStart"
-            @transformend="handleTransform('frame')"
-            @click="handleNodeClick"
-          />
+            <!-- Frame Image (Above) -->
+            <v-image
+              v-if="background.image"
+              :config="{
+                ...background.config,
+                id: 'frame',
+                draggable: selectedId === 'frame',
+                listening: selectedId === 'frame'
+              }"
+              @dragstart="handleDragStart"
+              @dragmove="handleDragMove('frame')"
+              @dragend="updatePosition('frame')"
+              @transformstart="handleTransformStart"
+              @transformend="handleTransform('frame')"
+            />
 
-          <!-- Transformer for selected object -->
-          <v-transformer
-            v-if="selectedId && !cropMode"
-            ref="transformer"
-            :config="transformerConfig"
-          />
+            <!-- Transformer for selected object -->
+            <v-transformer
+              v-if="selectedId && !cropMode"
+              ref="transformer"
+              :config="transformerConfig"
+            />
 
-          <!-- Crop Rectangle -->
-          <v-transformer
-            v-if="cropMode"
-            ref="cropTransformer"
-            :config="{
-              ...transformerConfig,
-              enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
-              boundBoxFunc: (oldBox, newBox) => {
-                // Ensure minimum size
-                if (newBox.width < 50 || newBox.height < 50) {
-                  return oldBox
-                }
-                return newBox
-              },
-              zIndex: 3
-            }"
-          />
-          <v-rect
-            v-if="cropMode"
-            :config="{
-              ...cropConfig,
-              id: 'crop'
-            }"
-            @dragend="updateCropPosition"
-            @transformend="updateCropTransform"
-          />
-        </v-layer>
+            <!-- Crop Rectangle -->
+            <v-transformer
+              v-if="cropMode"
+              ref="cropTransformer"
+              :config="{
+                ...transformerConfig,
+                enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+                boundBoxFunc: (oldBox, newBox) => {
+                  if (newBox.width < 50 || newBox.height < 50) {
+                    return oldBox;
+                  }
+                  return newBox;
+                },
+                zIndex: 3
+              }"
+            />
+            <v-rect
+              v-if="cropMode"
+              :config="{
+                ...cropConfig,
+                id: 'crop'
+              }"
+              @dragend="updateCropPosition"
+              @transformend="updateCropTransform"
+            />
+          </v-layer>
 
-        <!-- Mask Layer -->
-        <v-layer ref="maskLayer">
-          <!-- Dark Overlay -->
-          <v-rect
-            :config="{
-              x: 0,
-              y: 0,
-              width: stageConfig.width,
-              height: stageConfig.height,
-              fill: 'rgba(0,0,0,0.6)',
-              listening: false
-            }"
-          />
-          <!-- Circle Cutout -->
-          <v-circle
-            :config="{
-              x: stageConfig.width / 2,
-              y: stageConfig.height / 2,
-              radius: Math.min(safeArea.width, safeArea.height) / 2,
-              fill: 'black',
-              globalCompositeOperation: 'destination-out',
-              listening: false
-            }"
-          />
-        </v-layer>
-      </v-stage>
+          <!-- Mask Layer -->
+          <v-layer ref="maskLayer">
+            <v-rect
+              :config="{
+                x: 0,
+                y: 0,
+                width: stageConfig.width,
+                height: stageConfig.height,
+                fill: 'rgba(0,0,0,0.6)',
+                listening: false
+              }"
+            />
+            <v-circle
+              :config="{
+                x: stageConfig.width / 2,
+                y: stageConfig.height / 2,
+                radius: Math.min(safeArea.width, safeArea.height) / 2,
+                fill: 'black',
+                globalCompositeOperation: 'destination-out',
+                listening: false
+              }"
+            />
+          </v-layer>
+        </v-stage>
+      </div>
+
+      <!-- Upload Overlay -->
+      <div v-if="!background.image || !avatar.image"
+           class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-lg z-10">
+        <div class="text-center p-6 max-w-md">
+          <!-- Step indicator -->
+          <div class="flex items-center justify-center mb-4 step-indicator">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                 :class="background.image ? 'bg-teal-100 text-teal-700' : 'bg-teal-600 text-white'">1</div>
+            <div class="w-16 h-1" :class="background.image ? 'bg-teal-100' : 'bg-gray-200'"></div>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                 :class="avatar.image ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'">2</div>
+          </div>
+
+          <!-- Instruction text -->
+          <h3 class="text-xl font-medium text-gray-800 mb-2">
+            {{ !background.image ? 'Chọn khung ảnh' : 'Thêm ảnh đại diện của bạn' }}
+          </h3>
+          <p class="text-gray-600 mb-6">
+            {{ !background.image ? 'Chọn một khung từ gallery hoặc tải lên khung của bạn từ sidebar bên trái' : 'Tải lên ảnh đại diện để bắt đầu chỉnh sửa' }}
+          </p>
+
+          <!-- Action buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              v-if="background.image && !avatar.image"
+              class="btn btn-primary flex items-center justify-center gap-2 px-6 py-3 text-base"
+              @click="$emit('upload-avatar')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+              Chọn ảnh
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Upload Overlay - Show when no frame or no avatar -->
-    <div v-if="!background.image || !avatar.image"
-         class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-lg z-10">
-      <div class="text-center p-6 max-w-md">
-        <!-- Step indicator -->
-        <div class="flex items-center justify-center mb-4 step-indicator">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center"
-               :class="background.image ? 'bg-teal-100 text-teal-700' : 'bg-teal-600 text-white'">1</div>
-          <div class="w-16 h-1" :class="background.image ? 'bg-teal-100' : 'bg-gray-200'"></div>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center"
-               :class="avatar.image ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'">2</div>
+    <!-- Layer Panel -->
+    <div class="w-64 bg-white rounded-lg p-4 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-medium text-gray-900">Layers</h3>
+      </div>
+
+      <!-- Layer List -->
+      <div class="space-y-2">
+        <!-- Frame Layer -->
+        <div
+          class="flex items-center p-2 rounded cursor-pointer"
+          :class="{ 'bg-teal-50 ring-1 ring-teal-500': selectedId === 'frame' }"
+          @click="handleLayerSelect('frame')"
+        >
+          <div class="flex-1">
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm0 2h12v7H4V5z" clip-rule="evenodd" />
+              </svg>
+              <span class="font-medium text-gray-700">Frame</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1" v-if="background.image">
+              {{ background.image.width }}x{{ background.image.height }}px
+            </div>
+          </div>
+          <button
+            class="p-1 hover:bg-teal-100 rounded"
+            @click.stop="toggleLayerVisibility('frame')"
+          >
+            <svg v-if="layerVisibility.frame" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+            </svg>
+          </button>
         </div>
 
-        <!-- Instruction text -->
-        <h3 class="text-xl font-medium text-gray-800 mb-2">
-          {{ !background.image ? 'Chọn khung ảnh' : 'Thêm ảnh đại diện của bạn' }}
-        </h3>
-        <p class="text-gray-600 mb-6">
-          {{ !background.image ? 'Chọn một khung từ gallery hoặc tải lên khung của bạn từ sidebar bên trái' : 'Tải lên ảnh đại diện để bắt đầu chỉnh sửa' }}
-        </p>
-
-        <!-- Action buttons -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <!-- Avatar Layer -->
+        <div
+          class="flex items-center p-2 rounded cursor-pointer"
+          :class="{ 'bg-teal-50 ring-1 ring-teal-500': selectedId === 'avatar' }"
+          @click="handleLayerSelect('avatar')"
+        >
+          <div class="flex-1">
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+              <span class="font-medium text-gray-700">Avatar</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1" v-if="avatar.image">
+              {{ avatar.image.width }}x{{ avatar.image.height }}px
+            </div>
+          </div>
           <button
-            v-if="background.image && !avatar.image"
-            class="btn btn-primary flex items-center justify-center gap-2 px-6 py-3 text-base"
-            @click="$emit('upload-avatar')"
+            class="p-1 hover:bg-teal-100 rounded"
+            @click.stop="toggleLayerVisibility('avatar')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            <svg v-if="layerVisibility.avatar" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
             </svg>
-            Chọn ảnh
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+            </svg>
           </button>
         </div>
       </div>
@@ -151,7 +224,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, reactive } from 'vue'
 
 const props = defineProps({
   stageConfig: {
@@ -191,32 +264,44 @@ const emit = defineEmits([
   'update-transform',
   'update-crop-position',
   'update-crop-transform',
-  'upload-avatar'
+  'upload-avatar',
+  'layer-visibility-change'
 ])
 
 // Refs
 const stage = ref(null)
 const stageContainer = ref(null)
-const layer = ref(null)
+const mainLayer = ref(null)
 const maskLayer = ref(null)
 const cropTransformer = ref(null)
 const selectedId = ref(null)
 
+// Layer visibility state
+const layerVisibility = reactive({
+  frame: true,
+  avatar: true
+})
+
 // Methods
 const handleStageClick = (e) => {
-  emit('stage-click', e, stage.value)
+  // Only deselect when clicking on stage background
+  if (e.target === stage.value.getNode()) {
+    selectedId.value = null
+    emit('stage-click', e, stage.value)
+  }
 }
 
 const handleDragStart = (e) => {
   const target = e.target;
+  const id = target.id();
 
-  // Thêm hiệu ứng khi kéo
+  // Only allow drag if layer is already selected
+  if (selectedId.value !== id) return;
+
   target.setAttr('dragging', true);
   target.getLayer().batchDraw();
 
-  // Log để debug
-  console.log('Started dragging avatar:', {
-    id: target.id(),
+  console.log(`Started dragging ${id}:`, {
     position: { x: target.x(), y: target.y() }
   });
 }
@@ -225,11 +310,39 @@ const handleDragMove = (type) => {
   const node = stage.value.getNode().find(`#${type}`)[0];
   if (!node) return;
 
-  // Log vị trí trong quá trình di chuyển
-  console.log('Avatar moving:', {
-    x: node.x(),
-    y: node.y()
+  // Get stage boundaries
+  const stageBox = {
+    x: 0,
+    y: 0,
+    width: props.stageConfig.width,
+    height: props.stageConfig.height
+  };
+
+  // Calculate node boundaries with scale
+  const scale = {
+    x: node.scaleX(),
+    y: node.scaleY()
+  };
+  const width = node.width() * scale.x;
+  const height = node.height() * scale.y;
+
+  // Calculate new position with boundaries
+  let newX = Math.max(stageBox.x, Math.min(node.x(), stageBox.width - width));
+  let newY = Math.max(stageBox.y, Math.min(node.y(), stageBox.height - height));
+
+  // Update node position
+  node.position({
+    x: newX,
+    y: newY
   });
+
+  // Ensure frame stays on top
+  if (type === 'avatar') {
+    const frameNode = stage.value.getNode().find('#frame')[0];
+    if (frameNode) {
+      frameNode.moveToTop();
+    }
+  }
 
   emit('update-position', type, node);
   node.getLayer().batchDraw();
@@ -245,16 +358,16 @@ const updatePosition = (type) => {
   const node = stage.value.getNode().find(`#${type}`)[0];
   if (!node) return;
 
-  // Xóa hiệu ứng khi kết thúc kéo
-  if (type === 'avatar') {
-    node.setAttr('dragging', false);
-  }
+  // Remove dragging effect
+  node.setAttr('dragging', false);
 
-  // Log vị trí cuối cùng
-  console.log('Final position:', {
-    x: node.x(),
-    y: node.y()
-  });
+  // Ensure frame stays on top after drag
+  if (type === 'avatar') {
+    const frameNode = stage.value.getNode().find('#frame')[0];
+    if (frameNode) {
+      frameNode.moveToTop();
+    }
+  }
 
   emit('update-position', type, node);
   node.getLayer().batchDraw();
@@ -278,68 +391,76 @@ const updateCropTransform = () => {
   emit('update-crop-transform', cropNode)
 }
 
-const handleMouseDown = (e) => {
-  // Chỉ xử lý khi không ở chế độ cắt và có click vào avatar
-  if (props.cropMode) return
+const handleMouseDown = () => {}
+const handleTouchStart = () => {}
 
-  const target = e.target
-  if (target.id() === 'avatar') {
-    console.log('Avatar clicked')
-  }
-}
+const handleLayerSelect = (type) => {
+  // Don't select if layer is hidden
+  if (!layerVisibility[type]) return;
 
-const handleTouchStart = (e) => {
-  // Chỉ xử lý khi không ở chế độ cắt và có chạm vào avatar
-  if (props.cropMode) return
-
-  const touches = e.evt.touches
-  if (touches && touches.length === 1) {
-    const stageNode = stage.value.getNode()
-    const pos = stageNode.getPointerPosition()
-    const shape = stageNode.getIntersection(pos)
-
-    if (shape && shape.id() === 'avatar') {
-      console.log('Avatar touched')
+  // If clicking on already selected layer, deselect it
+  if (selectedId.value === type) {
+    selectedId.value = null;
+    const transformer = stage.value.getNode().find('Transformer')[0];
+    if (transformer) {
+      transformer.nodes([]);
+      mainLayer.value.getNode().batchDraw();
     }
+    return;
+  }
+
+  selectedId.value = type;
+  const node = stage.value.getNode().find(`#${type}`)[0];
+  const transformer = stage.value.getNode().find('Transformer')[0];
+
+  if (node && transformer) {
+    transformer.nodes([node]);
+    mainLayer.value.getNode().batchDraw();
   }
 }
 
-const handleNodeClick = (e) => {
-  // Get clicked node
-  const clickedNode = e.target;
-  const nodeId = clickedNode.id();
+const toggleLayerVisibility = (type) => {
+  const node = stage.value.getNode().find(`#${type}`)[0]
+  if (node) {
+    const newVisibility = !node.visible()
+    layerVisibility[type] = newVisibility
+    node.visible(newVisibility)
 
-  // Update selection
-  selectedId.value = nodeId;
+    // If hiding selected layer, deselect it
+    if (!newVisibility && selectedId.value === type) {
+      selectedId.value = null
+    }
 
-  // Attach transformer to selected node
-  const transformer = stage.value.getNode().find('Transformer')[0];
-  if (transformer) {
-    transformer.nodes([clickedNode]);
-    layer.value.getNode().batchDraw();
+    mainLayer.value.getNode().batchDraw()
+    emit('layer-visibility-change', { type, visible: newVisibility })
   }
 }
 
 // Lifecycle hooks
 onMounted(() => {
   emit('update-stage-size', stageContainer.value)
-  window.addEventListener('resize', () => emit('update-stage-size', stageContainer.value))
+
+  const handleResize = () => {
+    emit('update-stage-size', stageContainer.value)
+  }
+
+  window.addEventListener('resize', handleResize)
 
   // Watch for selected node changes
   watch(() => selectedId.value, (newValue) => {
     if (newValue) {
       nextTick(() => {
-        const node = stage.value.getNode().find(`#${newValue}`)[0];
-        const transformer = stage.value.getNode().find('Transformer')[0];
+        const node = stage.value.getNode().find(`#${newValue}`)[0]
+        const transformer = stage.value.getNode().find('Transformer')[0]
         if (node && transformer) {
-          transformer.nodes([node]);
-          layer.value.getNode().batchDraw();
+          transformer.nodes([node])
+          mainLayer.value.getNode().batchDraw()
         }
-      });
+      })
     }
-  });
+  })
 
-  // Update crop transformer when crop mode changes
+  // Watch for crop mode changes
   watch(() => props.cropMode, (newValue) => {
     if (newValue) {
       nextTick(() => {
@@ -351,18 +472,18 @@ onMounted(() => {
     }
   })
 
-  // Đảm bảo frame luôn ở trên cùng khi component được mount
+  // Ensure frame is always rendered above avatar
   nextTick(() => {
     const frameNode = stage.value?.getNode()?.find('#frame')?.[0]
     if (frameNode) {
       frameNode.moveToTop()
-      layer.value.getNode().draw()
+      mainLayer.value.getNode().draw()
     }
   })
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', () => emit('update-stage-size', stageContainer.value))
+  window.removeEventListener('resize', handleResize)
 })
 
 // Expose stage to parent component

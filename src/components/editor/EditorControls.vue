@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center space-x-4 mb-6">
+  <div class="flex space-x-4 mb-6">
     <!-- Kiểm tra xem có avatar và background không -->
     <div v-if="hasAvatarAndFrame">
       <!-- Các nút hiển thị khi không ở chế độ cắt -->

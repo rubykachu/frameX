@@ -73,13 +73,26 @@ export function useImageEditor() {
     anchorFill: '#fff',
     anchorSize: 8,
     anchorCornerRadius: 4,
-    padding: 8,
+    padding: -10,
     keepRatio: true,
     boundBoxFunc: (oldBox, newBox) => {
       // Prevent scaling smaller than 10px
       if (newBox.width < 10 || newBox.height < 10) {
         return oldBox
       }
+
+      // Prevent scaling larger than stage size
+      if (newBox.width > stageConfig.width * 1.2 || newBox.height > stageConfig.height * 1.2) {
+        return oldBox
+      }
+
+      // Ensure the transformer box stays within stage bounds
+      if (newBox.x < 0 || newBox.y < 0 ||
+          newBox.x + newBox.width > stageConfig.width ||
+          newBox.y + newBox.height > stageConfig.height) {
+        return oldBox
+      }
+
       return newBox
     }
   }
@@ -92,7 +105,8 @@ export function useImageEditor() {
     if (!container) return
 
     stageConfig.width = container.clientWidth
-    stageConfig.height = 400
+    stageConfig.height = container.clientWidth  // Set height equal to width for square aspect ratio
+    // stageConfig.height = 600
   }
 
   const loadImage = (file) => {
@@ -330,31 +344,42 @@ export function useImageEditor() {
       background.config.strokeWidth = selectedId.value === 'frame' ? 2 : 0
     }
     if (avatar.config) {
-      avatar.config.shadowBlur = selectedId.value === 'avatar' ? 10 : 0
-      avatar.config.stroke = selectedId.value === 'avatar' ? '#0D9488' : undefined
-      avatar.config.strokeWidth = selectedId.value === 'avatar' ? 2 : 0
+      avatar.config.shadowBlur = 0
+      avatar.config.stroke = undefined
+      avatar.config.strokeWidth = 0
     }
   }
 
   // Crop methods
   const startCrop = (stage) => {
-    if (!avatar.image) return
+    if (!avatar.image || !selectedId.value) return
 
     cropMode.value = true
-    const node = stage.getNode().find('#avatar')[0]
+    const node = stage.getNode().find(`#${selectedId.value}`)[0]
+    if (!node) return
 
-    cropConfig.x = node.x()
-    cropConfig.y = node.y()
-    cropConfig.width = node.width() * node.scaleX()
-    cropConfig.height = node.height() * node.scaleY()
+    // Set crop area to match the selected object's bounds
+    const nodeRect = node.getClientRect()
+
+    cropConfig.x = nodeRect.x
+    cropConfig.y = nodeRect.y
+    cropConfig.width = nodeRect.width
+    cropConfig.height = nodeRect.height
     cropConfig.visible = true
+
+    // Hide the transformer while in crop mode
+    const transformer = stage.getNode().find('Transformer')[0]
+    if (transformer) {
+      transformer.visible(false)
+    }
   }
 
   const applyCrop = (stage) => {
-    if (!avatar.image || !cropMode.value) return
+    if (!cropMode.value || !selectedId.value) return
 
-    const avatarNode = stage.getNode().find('#avatar')[0]
+    const node = stage.getNode().find(`#${selectedId.value}`)[0]
     const cropNode = stage.getNode().find('#crop')[0]
+    if (!node || !cropNode) return
 
     // Create temporary canvas for cropping
     const tempCanvas = document.createElement('canvas')
@@ -364,14 +389,38 @@ export function useImageEditor() {
     tempCanvas.width = cropConfig.width
     tempCanvas.height = cropConfig.height
 
+    // Calculate the relative position and scale for cropping
+    const scaleX = node.scaleX()
+    const scaleY = node.scaleY()
+    const rotation = node.rotation()
+
+    // Save current node attributes
+    const nodeAttrs = {
+      x: node.x(),
+      y: node.y(),
+      scaleX: scaleX,
+      scaleY: scaleY,
+      rotation: rotation
+    }
+
+    // Reset node transformation temporarily
+    node.setAttrs({
+      x: 0,
+      y: 0,
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0
+    })
+
     // Draw cropped portion
     ctx.drawImage(
-      avatarNode.image(),
-      (cropConfig.x - avatarNode.x()) / avatarNode.scaleX(),
-      (cropConfig.y - avatarNode.y()) / avatarNode.scaleY(),
-      cropConfig.width / avatarNode.scaleX(),
-      cropConfig.height / avatarNode.scaleY(),
-      0, 0,
+      node.image(),
+      (cropConfig.x - nodeAttrs.x) / scaleX,
+      (cropConfig.y - nodeAttrs.y) / scaleY,
+      cropConfig.width / scaleX,
+      cropConfig.height / scaleY,
+      0,
+      0,
       cropConfig.width,
       cropConfig.height
     )
@@ -379,21 +428,32 @@ export function useImageEditor() {
     // Create new image from cropped canvas
     const croppedImage = new Image()
     croppedImage.onload = () => {
-      avatar.image = croppedImage
-      avatar.config = {
-        ...avatar.config,
-        image: croppedImage,
-        x: cropConfig.x,
-        y: cropConfig.y,
-        scaleX: 1,
-        scaleY: 1
+      if (selectedId.value === 'avatar') {
+        avatar.image = croppedImage
+        avatar.config = {
+          ...avatar.config,
+          image: croppedImage,
+          x: cropConfig.x,
+          y: cropConfig.y,
+          scaleX: 1,
+          scaleY: 1
+        }
       }
 
       // Reset crop mode
       cropMode.value = false
       cropConfig.visible = false
+
+      // Show transformer again
+      const transformer = stage.getNode().find('Transformer')[0]
+      if (transformer) {
+        transformer.visible(true)
+      }
     }
     croppedImage.src = tempCanvas.toDataURL()
+
+    // Restore node attributes
+    node.setAttrs(nodeAttrs)
   }
 
   const cancelCrop = () => {

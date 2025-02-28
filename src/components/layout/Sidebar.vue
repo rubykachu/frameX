@@ -1,22 +1,22 @@
 <template>
-  <aside class="w-64 h-full bg-white border-r border-gray-200 overflow-y-auto">
+  <aside class="w-64 h-full bg-white border border-gray-200 overflow-y-auto rounded-lg">
     <div class="p-4">
       <h2 class="text-lg font-semibold text-gray-800 mb-4">Frame Gallery</h2>
-      
+
       <!-- Frame Search/URL Input -->
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-1">
           Frame URL
         </label>
         <div class="flex">
-          <input 
-            type="text" 
-            v-model="frameUrl" 
-            placeholder="https://example.com/frame.png" 
+          <input
+            type="text"
+            v-model="frameUrl"
+            placeholder="https://example.com/frame.png"
             class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
-          <button 
-            @click="loadFromUrl" 
+          <button
+            @click="loadFromUrl"
             class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-r-md transition-colors"
             :disabled="!isValidUrl"
           >
@@ -33,15 +33,15 @@
           Upload Your Frame
         </label>
         <div class="relative">
-          <input 
-            type="file" 
+          <input
+            type="file"
             accept="image/png,image/jpeg,image/svg+xml"
             @change="onFrameSelected"
             class="hidden"
             ref="fileInput"
           />
-          <button 
-            @click="$refs.fileInput.click()" 
+          <button
+            @click="$refs.fileInput.click()"
             class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -56,16 +56,16 @@
       <div class="mb-4">
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-sm font-medium text-gray-700">Categories</h3>
-          <button 
-            @click="showAllCategories = !showAllCategories" 
+          <button
+            @click="showAllCategories = !showAllCategories"
             class="text-indigo-600 text-xs hover:underline focus:outline-none"
           >
             {{ showAllCategories ? 'Collapse' : 'View All' }}
           </button>
         </div>
         <div class="space-y-2">
-          <button 
-            v-for="(category, index) in displayedCategories" 
+          <button
+            v-for="(category, index) in displayedCategories"
             :key="index"
             @click="selectCategory(category)"
             class="block w-full text-left px-3 py-2 text-sm rounded-md transition-colors"
@@ -80,16 +80,16 @@
       <div>
         <h3 class="text-sm font-medium text-gray-700 mb-2">Available Frames</h3>
         <div class="grid grid-cols-2 gap-2">
-          <div 
-            v-for="(frame, index) in filteredFrames" 
+          <div
+            v-for="(frame, index) in filteredFrames"
             :key="index"
             @click="selectFrame(frame)"
             class="relative aspect-square border rounded-md cursor-pointer hover:border-indigo-500 transition-colors p-1"
             :class="selectedFrameId === frame.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'"
           >
-            <img 
-              :src="frame.thumbnail" 
-              alt="Frame thumbnail" 
+            <img
+              :src="frame.thumbnail"
+              alt="Frame thumbnail"
               class="w-full h-full object-contain"
             />
           </div>
@@ -141,27 +141,27 @@ const displayedCategories = computed(() => {
 
 // Sample frames data - in a real app, this would come from an API
 const frames = ref([
-  { 
-    id: 'frame1', 
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+1', 
+  {
+    id: 'frame1',
+    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+1',
     src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+1',
     category: 'social'
   },
-  { 
-    id: 'frame2', 
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+2', 
+  {
+    id: 'frame2',
+    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+2',
     src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+2',
     category: 'business'
   },
-  { 
-    id: 'frame3', 
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+3', 
+  {
+    id: 'frame3',
+    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+3',
     src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+3',
     category: 'personal'
   },
-  { 
-    id: 'frame4', 
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+4', 
+  {
+    id: 'frame4',
+    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+4',
     src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+4',
     category: 'events'
   }

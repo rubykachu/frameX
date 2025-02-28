@@ -3,43 +3,43 @@ import { ref, computed } from 'vue';
 export function useFrames() {
   // Sample frame data - in a production app, this would come from an API
   const sampleFrames = [
-    { 
-      id: 'frame1', 
+    {
+      id: 'frame1',
       name: 'Facebook Profile',
-      thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=FB',
-      src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Facebook+Frame',
+      thumbnail: 'https://i.imgur.com/59BflFY.jpeg',
+      src: 'https://i.imgur.com/59BflFY.jpeg',
       category: 'social'
     },
-    { 
-      id: 'frame2', 
+    {
+      id: 'frame2',
       name: 'Business Card',
-      thumbnail: 'https://via.placeholder.com/150/0891b2/ffffff?text=BIZ',
-      src: 'https://via.placeholder.com/800/0891b2/ffffff?text=Business+Frame',
+      thumbnail: 'https://drive.google.com/file/d/1jRD_7EUNEKVcQThBk4zDRUdOgd28Cgkr/view?usp=drive_link',
+      src: 'https://drive.google.com/file/d/1jRD_7EUNEKVcQThBk4zDRUdOgd28Cgkr/view?usp=drive_link',
       category: 'business'
     },
-    { 
-      id: 'frame3', 
+    {
+      id: 'frame3',
       name: 'Personal Avatar',
       thumbnail: 'https://via.placeholder.com/150/6366f1/ffffff?text=AVA',
       src: 'https://via.placeholder.com/800/6366f1/ffffff?text=Personal+Frame',
       category: 'personal'
     },
-    { 
-      id: 'frame4', 
-      name: 'Event Badge', 
+    {
+      id: 'frame4',
+      name: 'Event Badge',
       thumbnail: 'https://via.placeholder.com/150/be123c/ffffff?text=EVT',
       src: 'https://via.placeholder.com/800/be123c/ffffff?text=Event+Frame',
       category: 'events'
     },
-    { 
-      id: 'frame5', 
+    {
+      id: 'frame5',
       name: 'Holiday Theme',
       thumbnail: 'https://via.placeholder.com/150/059669/ffffff?text=HOL',
       src: 'https://via.placeholder.com/800/059669/ffffff?text=Holiday+Frame',
       category: 'holidays'
     },
-    { 
-      id: 'frame6', 
+    {
+      id: 'frame6',
       name: 'Decorative Border',
       thumbnail: 'https://via.placeholder.com/150/8b5cf6/ffffff?text=DEC',
       src: 'https://via.placeholder.com/800/8b5cf6/ffffff?text=Decorative+Frame',
@@ -63,7 +63,7 @@ export function useFrames() {
   ];
 
   // Computed properties
-  const selectedFrame = computed(() => 
+  const selectedFrame = computed(() =>
     frames.value.find(frame => frame.id === selectedFrameId.value)
   );
 
@@ -90,7 +90,7 @@ export function useFrames() {
       src: frame.src,
       category: 'personal'
     };
-    
+
     frames.value.unshift(newFrame);
     return newFrame;
   };
@@ -102,7 +102,7 @@ export function useFrames() {
       if (!response.ok) {
         throw new Error('Image not found or not accessible');
       }
-      
+
       const id = `url-${Date.now()}`;
       const newFrame = {
         id,
@@ -111,7 +111,7 @@ export function useFrames() {
         src: url,
         category: 'personal'
       };
-      
+
       frames.value.unshift(newFrame);
       return newFrame;
     } catch (error) {
