@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Color Palette */
+  --color-primary: #4f46e5; /* indigo-600 */
+  --color-primary-dark: #4338ca; /* indigo-700 */
+  --color-primary-light: #e0e7ff; /* indigo-100 */
+  
+  --color-secondary: #0891b2; /* cyan-600 */
+  --color-secondary-dark: #0e7490; /* cyan-700 */
+  --color-secondary-light: #cffafe; /* cyan-100 */
+  
+  --color-background: #f8fafc; /* slate-50 */
+  --color-text: #0f172a; /* slate-900 */
+  --color-text-light: #64748b; /* slate-500 */
+  
+  --color-error: #ef4444; /* red-500 */
+  --color-success: #10b981; /* emerald-500 */
+  --color-warning: #f59e0b; /* amber-500 */
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+  
+  /* Typography */
+  --font-family: 'Poppins', system-ui, sans-serif;
+  
+  /* Borders */
+  --border-radius-sm: 0.25rem; /* 4px */
+  --border-radius-md: 0.375rem; /* 6px */
+  --border-radius-lg: 0.5rem; /* 8px */
+  --border-radius-xl: 0.75rem; /* 12px */
+  --border-radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Elements */
+body {
+  @apply bg-background text-textColor font-sans antialiased;
+  font-family: var(--font-family);
+}
+
+/* Component Classes */
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow border border-gray-200 p-6;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500;
+  }
+  
+  .btn-icon {
+    @apply p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full;
+  }
+  
+  .input-file {
+    @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-light file:text-primary hover:file:bg-primary hover:file:text-white;
+  }
+  
+  .tooltip {
+    @apply absolute hidden group-hover:block bg-gray-900 text-white text-xs rounded-md py-1 px-2 -mt-10 -ml-8 z-10;
+  }
+}

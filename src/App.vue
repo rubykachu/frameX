@@ -1,193 +1,189 @@
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen bg-background flex flex-col">
     <Header />
 
-    <main class="container mx-auto px-4 py-8">
-      <!-- Editor Container -->
-      <div class="max-w-2xl mx-auto">
-        <!-- Canvas Container -->
-        <div class="relative aspect-square bg-gray-100 rounded-lg mb-6">
-          <div class="absolute inset-0" ref="stageContainer">
-            <v-stage
-              ref="stage"
-              :config="stageConfig"
-              @click="handleStageClick"
-            >
-              <!-- Main Layer (Avatar) -->
-              <v-layer ref="layer">
-                <!-- Avatar Image -->
-                <v-image
-                  v-if="avatar.image"
-                  :config="{
-                    ...avatar.config,
-                    id: 'avatar',
-                    draggable: !cropMode
-                  }"
-                  @dragend="updatePosition('avatar')"
-                  @transformend="updateTransform('avatar')"
-                />
-                <!-- Frame Image -->
-                <v-image
-                  v-if="background.image"
-                  :config="{
-                    ...background.config,
-                    id: 'frame',
-                    draggable: false,
-                    listening: false
-                  }"
-                />
-                <!-- Crop Rectangle -->
-                <v-transformer
-                  v-if="cropMode"
-                  ref="cropTransformer"
-                  :config="{
-                    ...transformerConfig,
-                    enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
-                    boundBoxFunc: (oldBox, newBox) => {
-                      // Ensure minimum size
-                      if (newBox.width < 50 || newBox.height < 50) {
-                        return oldBox
+    <main class="container mx-auto px-4 py-8 flex-1">
+      <div class="flex flex-row gap-6 h-full">
+        <!-- Sidebar -->
+        <Sidebar 
+          @select-frame="handleSelectFrame"
+          @upload-frame="handleFrameUpload"
+          @load-from-url="handleFrameFromUrl"
+        />
+      
+        <!-- Editor Container -->
+        <div class="flex-1">
+          <!-- Canvas Container -->
+          <div class="relative aspect-square bg-gray-100 rounded-lg mb-6 flex-1">
+            <div class="absolute inset-0" ref="stageContainer">
+              <v-stage
+                ref="stage"
+                :config="stageConfig"
+                @click="handleStageClick"
+              >
+                <!-- Main Layer (Avatar) -->
+                <v-layer ref="layer">
+                  <!-- Avatar Image -->
+                  <v-image
+                    v-if="avatar.image"
+                    :config="{
+                      ...avatar.config,
+                      id: 'avatar',
+                      draggable: !cropMode
+                    }"
+                    @dragend="updatePosition('avatar')"
+                    @transformend="updateTransform('avatar')"
+                  />
+                  <!-- Frame Image -->
+                  <v-image
+                    v-if="background.image"
+                    :config="{
+                      ...background.config,
+                      id: 'frame',
+                      draggable: false,
+                      listening: false
+                    }"
+                  />
+                  <!-- Crop Rectangle -->
+                  <v-transformer
+                    v-if="cropMode"
+                    ref="cropTransformer"
+                    :config="{
+                      ...transformerConfig,
+                      enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+                      boundBoxFunc: (oldBox, newBox) => {
+                        // Ensure minimum size
+                        if (newBox.width < 50 || newBox.height < 50) {
+                          return oldBox
+                        }
+                        return newBox
                       }
-                      return newBox
-                    }
-                  }"
-                />
-                <v-rect
-                  v-if="cropMode"
-                  :config="{
-                    ...cropConfig,
-                    id: 'crop'
-                  }"
-                  @dragend="updateCropPosition"
-                  @transformend="updateCropTransform"
-                />
-              </v-layer>
+                    }"
+                  />
+                  <v-rect
+                    v-if="cropMode"
+                    :config="{
+                      ...cropConfig,
+                      id: 'crop'
+                    }"
+                    @dragend="updateCropPosition"
+                    @transformend="updateCropTransform"
+                  />
+                </v-layer>
 
-              <!-- Mask Layer -->
-              <v-layer ref="maskLayer">
-                <!-- Dark Overlay -->
-                <v-rect
-                  :config="{
-                    x: 0,
-                    y: 0,
-                    width: stageConfig.width,
-                    height: stageConfig.height,
-                    fill: 'rgba(0,0,0,0.6)',
-                    listening: false
-                  }"
-                />
-                <!-- Circle Cutout -->
-                <v-circle
-                  :config="{
-                    x: stageConfig.width / 2,
-                    y: stageConfig.height / 2,
-                    radius: Math.min(safeArea.width, safeArea.height) / 2,
-                    fill: 'black',
-                    globalCompositeOperation: 'destination-out',
-                    listening: false
-                  }"
-                />
-              </v-layer>
-            </v-stage>
-          </div>
-        </div>
-
-        <!-- Controls -->
-        <div class="space-y-6">
-          <!-- Scale Control -->
-          <div v-if="avatar.image" class="flex items-center space-x-4 px-4">
-            <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.max(0.1, avatarScale - 0.1) }})">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-              </svg>
-            </button>
-            <input
-              type="range"
-              min="0.1"
-              max="2"
-              step="0.01"
-              class="w-full"
-              :value="avatarScale"
-              @input="handleScale"
-            />
-            <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.min(2, avatarScale + 0.1) }})">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
+                <!-- Mask Layer -->
+                <v-layer ref="maskLayer">
+                  <!-- Dark Overlay -->
+                  <v-rect
+                    :config="{
+                      x: 0,
+                      y: 0,
+                      width: stageConfig.width,
+                      height: stageConfig.height,
+                      fill: 'rgba(0,0,0,0.6)',
+                      listening: false
+                    }"
+                  />
+                  <!-- Circle Cutout -->
+                  <v-circle
+                    :config="{
+                      x: stageConfig.width / 2,
+                      y: stageConfig.height / 2,
+                      radius: Math.min(safeArea.width, safeArea.height) / 2,
+                      fill: 'black',
+                      globalCompositeOperation: 'destination-out',
+                      listening: false
+                    }"
+                  />
+                </v-layer>
+              </v-stage>
+            </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex justify-center space-x-4">
-            <button
-              v-if="!background.image"
-              class="btn btn-secondary"
-              @click="handleUploadFrame"
-            >
-              Chọn khung
-            </button>
-            <button
-              v-if="background.image && !avatar.image"
-              class="btn btn-secondary"
-              @click="handleUploadAvatar"
-            >
-              Chọn ảnh
-            </button>
-            <button
-              v-if="avatar.image && !cropMode"
-              class="btn btn-secondary"
-              @click="startCrop"
-            >
-              Cắt ảnh
-            </button>
-            <template v-if="cropMode">
-              <button
-                class="btn btn-primary"
-                @click="applyCrop"
-              >
-                Xác nhận
+          <!-- Controls -->
+          <div class="space-y-6">
+            <!-- Scale Control -->
+            <div v-if="avatar.image" class="flex items-center space-x-4 px-4">
+              <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.max(0.1, avatarScale - 0.1) }})">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
               </button>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.01"
+                class="w-full"
+                :value="avatarScale"
+                @input="handleScale"
+              />
+              <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.min(2, avatarScale + 0.1) }})">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4">
               <button
+                v-if="!background.image"
                 class="btn btn-secondary"
-                @click="cancelCrop"
+                @click="handleUploadFrame"
               >
-                Huỷ
+                Chọn khung
               </button>
-            </template>
-            <button
-              v-if="avatar.image && background.image && !cropMode"
-              class="btn btn-primary"
-              @click="handleExport('png')"
-            >
-              Tải về
-            </button>
+              <button
+                v-if="background.image && !avatar.image"
+                class="btn btn-secondary"
+                @click="handleUploadAvatar"
+              >
+                Chọn ảnh
+              </button>
+              <button
+                v-if="avatar.image && !cropMode"
+                class="btn btn-secondary"
+                @click="startCrop"
+              >
+                Cắt ảnh
+              </button>
+              <template v-if="cropMode">
+                <button
+                  class="btn btn-primary"
+                  @click="applyCrop"
+                >
+                  Xác nhận
+                </button>
+                <button
+                  class="btn btn-secondary"
+                  @click="cancelCrop"
+                >
+                  Hủy
+                </button>
+              </template>
+              <button
+                v-if="avatar.image && !cropMode"
+                class="btn btn-primary"
+                @click="handleExport('png')"
+              >
+                Tải xuống
+              </button>
+            </div>
           </div>
-
-          <!-- Hidden File Inputs -->
-          <input
-            type="file"
-            ref="frameInput"
-            class="hidden"
-            accept="image/png,image/jpeg"
-            @change="onFrameFileSelected"
-          />
-          <input
-            type="file"
-            ref="avatarInput"
-            class="hidden"
-            accept="image/png,image/jpeg"
-            @change="onAvatarFileSelected"
-          />
         </div>
       </div>
     </main>
+
+    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick, computed, watch } from 'vue'
 import Header from './components/layout/Header.vue'
-import ControlPanel from './components/editor/ControlPanel.vue'
+import Footer from './components/layout/Footer.vue'
+import Sidebar from './components/layout/Sidebar.vue'
 
 // Constants for Facebook avatar dimensions
 const FB_AVATAR_SIZE = 500 // Facebook recommends 500x500px
@@ -717,6 +713,45 @@ onUnmounted(() => {
 
   window.removeEventListener('resize', updateStageSize)
 })
+
+// Handle frame selection from sidebar
+const handleSelectFrame = (frame) => {
+  if (frame && frame.src) {
+    const img = new Image()
+    img.crossOrigin = 'Anonymous'
+    img.src = frame.src
+    img.onload = () => {
+      handleBackgroundUpload(img)
+    }
+    img.onerror = (err) => {
+      console.error('Error loading frame image:', err)
+    }
+  }
+}
+
+// Handle frame upload from sidebar
+const handleFrameUpload = (file) => {
+  if (file) {
+    onFrameFileSelected({ target: { files: [file] } })
+  }
+}
+
+// Handle frame from URL input
+const handleFrameFromUrl = async (url) => {
+  try {
+    const img = new Image()
+    img.crossOrigin = 'Anonymous'
+    img.src = url
+    img.onload = () => {
+      handleBackgroundUpload(img)
+    }
+    img.onerror = () => {
+      console.error('Error loading image from URL')
+    }
+  } catch (error) {
+    console.error('Error checking image URL:', error)
+  }
+}
 </script>
 
 <style>

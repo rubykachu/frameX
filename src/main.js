@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import VueKonva from 'vue-konva'
 import './style.css'
+import './assets/main.css'
 import App from './App.vue'
 
 const app = createApp(App)
