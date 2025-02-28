@@ -5,16 +5,24 @@
     <main class="container mx-auto px-4 py-8 flex-1">
       <div class="flex flex-row gap-6 h-full">
         <!-- Sidebar -->
-        <Sidebar 
+        <Sidebar
           @select-frame="handleSelectFrame"
           @upload-frame="handleFrameUpload"
           @load-from-url="handleFrameFromUrl"
         />
-      
+
         <!-- Editor Container -->
         <div class="flex-1">
+          <!-- Hidden file inputs -->
+          <input
+            type="file"
+            ref="avatarInput"
+            @change="onAvatarFileSelected"
+            accept="image/png,image/jpeg,image/svg+xml"
+            class="hidden"
+          />
           <!-- Canvas Container -->
-          <div class="relative aspect-square bg-gray-100 rounded-lg mb-6 flex-1">
+          <div class="relative aspect-square bg-gray-100 rounded-lg mb-4 flex-1 border border-gray-100">
             <div class="absolute inset-0" ref="stageContainer">
               <v-stage
                 ref="stage"
@@ -98,78 +106,98 @@
                 </v-layer>
               </v-stage>
             </div>
+
+            <!-- Upload Overlay - Show when no frame or no avatar -->
+            <div v-if="!background.image || !avatar.image"
+                 class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-lg z-10">
+              <div class="text-center p-6 max-w-md">
+                <!-- Step indicator -->
+                <div class="flex items-center justify-center mb-4 step-indicator">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                       :class="background.image ? 'bg-teal-100 text-teal-700' : 'bg-teal-600 text-white'">1</div>
+                  <div class="w-16 h-1" :class="background.image ? 'bg-teal-100' : 'bg-gray-200'"></div>
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                       :class="avatar.image ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'">2</div>
+                </div>
+
+                <!-- Instruction text -->
+                <h3 class="text-xl font-medium text-gray-800 mb-2">
+                  {{ !background.image ? 'Chọn khung ảnh' : 'Thêm ảnh đại diện của bạn' }}
+                </h3>
+                <p class="text-gray-600 mb-6">
+                  {{ !background.image ? 'Chọn một khung từ gallery hoặc tải lên khung của bạn từ sidebar bên trái' : 'Tải lên ảnh đại diện để bắt đầu chỉnh sửa' }}
+                </p>
+
+                <!-- Action buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    v-if="background.image && !avatar.image"
+                    class="btn btn-primary flex items-center justify-center gap-2 px-6 py-3 text-base"
+                    @click="handleUploadAvatar"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    Chọn ảnh
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Controls -->
-          <div class="space-y-6">
-            <!-- Scale Control -->
-            <div v-if="avatar.image" class="flex items-center space-x-4 px-4">
-              <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.max(0.1, avatarScale - 0.1) }})">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+          <!-- Action Buttons - Moved closer to the canvas -->
+          <div class="flex justify-center space-x-4 mb-6">
+            <button
+              v-if="!cropMode && avatar.image"
+              class="btn btn-outline flex items-center justify-center gap-2 px-6 py-3 text-base"
+              @click="handleUploadAvatar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+              </svg>
+              Chọn ảnh khác
+            </button>
+            <button
+              v-if="!cropMode && avatar.image"
+              class="btn btn-secondary flex items-center justify-center gap-2 px-6 py-3 text-base"
+              @click="startCrop"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.5 2A1.5 1.5 0 004 3.5v13A1.5 1.5 0 005.5 18h9a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0014.5 2h-9zM5 3.5a.5.5 0 01.5-.5h9a.5.5 0 01.5.5v13a.5.5 0 01-.5.5h-9a.5.5 0 01-.5-.5v-13z" clip-rule="evenodd" />
+                <path d="M8 6h4a1 1 0 110 2H8a1 1 0 110-2z" />
+              </svg>
+              Cắt ảnh
+            </button>
+            <template v-if="cropMode">
+              <button
+                class="btn btn-primary flex items-center justify-center gap-2 px-6 py-3 text-base"
+                @click="applyCrop"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
+                Xác nhận
               </button>
-              <input
-                type="range"
-                min="0.1"
-                max="2"
-                step="0.01"
-                class="w-full"
-                :value="avatarScale"
-                @input="handleScale"
-              />
-              <button class="p-2 text-gray-600 hover:text-gray-900" @click="handleScale({ target: { value: Math.min(2, avatarScale + 0.1) }})">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              <button
+                class="btn btn-secondary flex items-center justify-center gap-2 px-6 py-3 text-base"
+                @click="cancelCrop"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
+                Hủy
               </button>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex justify-center space-x-4">
-              <button
-                v-if="!background.image"
-                class="btn btn-secondary"
-                @click="handleUploadFrame"
-              >
-                Chọn khung
-              </button>
-              <button
-                v-if="background.image && !avatar.image"
-                class="btn btn-secondary"
-                @click="handleUploadAvatar"
-              >
-                Chọn ảnh
-              </button>
-              <button
-                v-if="avatar.image && !cropMode"
-                class="btn btn-secondary"
-                @click="startCrop"
-              >
-                Cắt ảnh
-              </button>
-              <template v-if="cropMode">
-                <button
-                  class="btn btn-primary"
-                  @click="applyCrop"
-                >
-                  Xác nhận
-                </button>
-                <button
-                  class="btn btn-secondary"
-                  @click="cancelCrop"
-                >
-                  Hủy
-                </button>
-              </template>
-              <button
-                v-if="avatar.image && !cropMode"
-                class="btn btn-primary"
-                @click="handleExport('png')"
-              >
-                Tải xuống
-              </button>
-            </div>
+            </template>
+            <button
+              v-if="avatar.image && !cropMode"
+              class="btn btn-primary flex items-center justify-center gap-2 px-6 py-3 text-base shadow-md hover:shadow-lg active:shadow-none active:translate-y-0.5 download-btn"
+              @click="handleExport('png')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              Tải xuống
+            </button>
           </div>
         </div>
       </div>
@@ -756,7 +784,7 @@ const handleFrameFromUrl = async (url) => {
 
 <style>
 .btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-colors;
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
 }
 
 .btn-primary {
@@ -783,15 +811,15 @@ input[type="range"]::-moz-range-thumb {
   @apply w-6 h-6 rounded-full bg-teal-600 cursor-pointer shadow-md border-0;
 }
 
-input[type="range"]:focus {
+input[type="range"]::focus {
   @apply outline-none;
 }
 
-input[type="range"]:focus::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   @apply ring-4 ring-teal-200;
 }
 
-input[type="range"]:focus::-moz-range-thumb {
+input[type="range"]::-moz-range-thumb {
   @apply ring-4 ring-teal-200;
 }
 
@@ -821,5 +849,72 @@ input[type="range"]:focus::-moz-range-thumb {
 
 .scale-control button {
   @apply p-2 text-gray-600 hover:text-gray-900 transition-colors;
+}
+
+/* Upload overlay styles */
+.upload-overlay {
+  @apply bg-white transition-all duration-300;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Step indicator styles */
+.step-indicator {
+  @apply flex items-center justify-center mb-6;
+}
+
+.step-indicator-item {
+  @apply w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300;
+}
+
+.step-indicator-line {
+  @apply w-16 h-1 transition-all duration-300;
+}
+
+/* Button hover effects */
+.btn {
+  @apply transform transition-all duration-200;
+}
+
+.btn:hover {
+  @apply shadow-md -translate-y-0.5;
+}
+
+.btn:active {
+  @apply shadow-none translate-y-0;
+}
+
+/* Canvas container with improved styling */
+.relative.aspect-square {
+  @apply bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100;
+  transition: all 0.3s ease;
+}
+
+/* Download button pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(13, 148, 136, 0);
+  }
+}
+
+.btn-primary.download-btn {
+  animation: pulse 2s infinite;
+}
+
+/* Improved scale control */
+.scale-control {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden;
+}
+
+/* Add smooth transitions */
+.v-stage, .v-layer, .v-image {
+  transition: transform 0.2s ease-out;
 }
 </style>
