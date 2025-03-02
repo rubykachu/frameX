@@ -1,6 +1,6 @@
 <template>
   <!-- Layout Container -->
-  <div class="flex gap-4">
+  <div class="flex gap-4" ref="editorContainer">
     <!-- Canvas Area -->
     <div class="relative aspect-square bg-gray-100 rounded-lg flex-1 border border-gray-100">
       <div class="absolute inset-0" ref="stageContainer">
@@ -122,7 +122,7 @@
     </div>
 
     <!-- Layer Panel -->
-    <div class="w-64 bg-white rounded-lg p-4 border border-gray-200">
+    <div class="w-64 bg-white rounded-lg p-4 border border-gray-200 layer-panel">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-medium text-gray-900">Layers</h3>
       </div>
@@ -238,6 +238,7 @@ const stageContainer = ref(null)
 const mainLayer = ref(null)
 const maskLayer = ref(null)
 const selectedId = ref(null)
+const editorContainer = ref(null)
 
 // Layer visibility state
 const layerVisibility = reactive({
@@ -387,6 +388,35 @@ const toggleLayerVisibility = (type) => {
   }
 }
 
+// Hàm để hủy chọn object khi click ra ngoài
+const handleOutsideClick = (e) => {
+  // Kiểm tra xem đã chọn object nào chưa
+  if (!selectedId.value) return;
+
+  // Kiểm tra xem click có phải là bên trong stage container không
+  const stageEl = stage.value?.getNode()?.getStage().container();
+  const editorEl = editorContainer.value;
+
+  // Nếu click không phải trong stage container và không phải trong editor container
+  // hoặc click vào editor container nhưng không phải vào stage hoặc layer panel
+  if (!stageEl?.contains(e.target) &&
+      (!editorEl?.contains(e.target) ||
+       (editorEl?.contains(e.target) && !e.target.closest('.layer-panel') && !stageEl?.contains(e.target)))) {
+    // Hủy chọn object
+    selectedId.value = null;
+
+    // Cập nhật transformer
+    const transformer = stage.value?.getNode()?.find('Transformer')[0];
+    if (transformer) {
+      transformer.nodes([]);
+      mainLayer.value?.getNode()?.batchDraw();
+    }
+
+    // Thông báo cho component cha
+    emit('stage-click', null, stage.value);
+  }
+}
+
 // Lifecycle hooks
 onMounted(() => {
   emit('update-stage-size', stageContainer.value)
@@ -396,6 +426,10 @@ onMounted(() => {
   }
 
   window.addEventListener('resize', handleResize)
+
+  // Thêm event listener cho click bên ngoài
+  document.addEventListener('mousedown', handleOutsideClick)
+  document.addEventListener('touchstart', handleOutsideClick)
 
   // Watch for selected node changes
   watch(() => selectedId.value, (newValue) => {
@@ -423,6 +457,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+
+  // Xóa event listener khi component bị hủy
+  document.removeEventListener('mousedown', handleOutsideClick)
+  document.removeEventListener('touchstart', handleOutsideClick)
 })
 
 // Expose stage to parent component
@@ -457,5 +495,11 @@ defineExpose({
     width: 100% !important;
     height: auto !important;
   }
+}
+
+/* Thêm class cho layer panel để dễ select */
+.layer-panel {
+  position: relative;
+  z-index: 10;
 }
 </style>

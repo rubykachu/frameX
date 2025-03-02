@@ -1,5 +1,5 @@
 <template>
-  <div class="flex space-x-4 mb-6 mt-1">
+  <div class="flex space-x-4 mb-6 mt-1 mt-5">
     <!-- Kiểm tra xem có avatar và background không -->
     <div v-if="hasAvatarAndFrame">
       <!-- Các nút hiển thị - đã loại bỏ nút cắt ảnh -->

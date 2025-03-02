@@ -54,12 +54,12 @@ export function useImageEditor() {
     enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
     rotationSnaps: [0, 90, 180, 270],
     borderStroke: '#0D9488',
-    borderStrokeWidth: 2,
+    borderStrokeWidth: 5,
     anchorStroke: '#0D9488',
     anchorFill: '#fff',
-    anchorSize: 8,
-    anchorCornerRadius: 4,
-    padding: -10,
+    anchorSize: 15,
+    anchorCornerRadius: 10,
+    padding: -5,
     keepRatio: true,
     boundBoxFunc: (oldBox, newBox) => {
       // Prevent scaling smaller than 10px
@@ -274,65 +274,99 @@ export function useImageEditor() {
       // Lấy stage node
       const stage = stageRef.getNode();
 
-      // Tạo một bản sao tạm thời của stage để xuất hình ảnh
-      const tempStage = stage.clone();
-
-      // Tạo container tạm thời để render stage
-      const tempContainer = document.getElementById('temp-container');
-      if (!tempContainer) {
-        console.error('Temp container not found');
-        return;
-      }
-
-      // Đặt kích thước cho container tạm thời
-      tempContainer.style.width = `${stage.width()}px`;
-      tempContainer.style.height = `${stage.height()}px`;
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.visibility = 'hidden';
-
-      // Thêm stage tạm thời vào container
-      tempStage.container(tempContainer);
-
       // Lấy các node từ stage gốc
       const avatarNode = stage.findOne('#avatar');
       const frameNode = stage.findOne('#frame');
 
-      // Tạo layer mới cho stage tạm thời
+      if (!avatarNode || !frameNode) {
+        console.error('Avatar or frame node not found');
+        return;
+      }
+
+      // Tạo một canvas tạm thời để vẽ chỉ avatar và frame
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Tính toán kích thước và vị trí của vùng cần xuất
+      // Lấy kích thước và vị trí của cả avatar và frame
+      const avatarRect = {
+        x: avatarNode.x(),
+        y: avatarNode.y(),
+        width: avatarNode.width() * avatarNode.scaleX(),
+        height: avatarNode.height() * avatarNode.scaleY()
+      };
+
+      const frameRect = {
+        x: frameNode.x(),
+        y: frameNode.y(),
+        width: frameNode.width() * frameNode.scaleX(),
+        height: frameNode.height() * frameNode.scaleY()
+      };
+
+      // Tính toán vùng bao quanh cả avatar và frame
+      const boundingBox = {
+        x: Math.min(avatarRect.x, frameRect.x),
+        y: Math.min(avatarRect.y, frameRect.y),
+        width: Math.max(
+          avatarRect.x + avatarRect.width,
+          frameRect.x + frameRect.width
+        ) - Math.min(avatarRect.x, frameRect.x),
+        height: Math.max(
+          avatarRect.y + avatarRect.height,
+          frameRect.y + frameRect.height
+        ) - Math.min(avatarRect.y, frameRect.y)
+      };
+
+      // Thêm padding nhỏ xung quanh để đảm bảo không cắt sát quá
+      const padding = 10;
+      boundingBox.x -= padding;
+      boundingBox.y -= padding;
+      boundingBox.width += padding * 2;
+      boundingBox.height += padding * 2;
+
+      // Đảm bảo không vượt quá kích thước stage
+      boundingBox.x = Math.max(0, boundingBox.x);
+      boundingBox.y = Math.max(0, boundingBox.y);
+      boundingBox.width = Math.min(boundingBox.width, stage.width() - boundingBox.x);
+      boundingBox.height = Math.min(boundingBox.height, stage.height() - boundingBox.y);
+
+      // Đặt kích thước cho canvas
+      canvas.width = boundingBox.width;
+      canvas.height = boundingBox.height;
+
+      // Tạo một stage tạm thời để render
+      const tempStage = new Konva.Stage({
+        container: document.createElement('div'),
+        width: boundingBox.width,
+        height: boundingBox.height
+      });
+
       const tempLayer = new Konva.Layer();
       tempStage.add(tempLayer);
 
-      // Nếu có avatar, thêm bản sao của nó vào layer tạm thời
-      if (avatarNode) {
-        const tempAvatar = avatarNode.clone({
-          id: 'avatar',
-          x: avatarNode.x(),
-          y: avatarNode.y(),
-          scaleX: avatarNode.scaleX(),
-          scaleY: avatarNode.scaleY(),
-          rotation: avatarNode.rotation(),
-          draggable: false,
-          listening: false
-        });
-        tempLayer.add(tempAvatar);
-      }
+      // Tạo bản sao của avatar và frame, điều chỉnh vị trí tương đối với boundingBox
+      const tempAvatar = avatarNode.clone({
+        x: avatarRect.x - boundingBox.x,
+        y: avatarRect.y - boundingBox.y,
+        draggable: false,
+        listening: false
+      });
 
-      // Nếu có frame, thêm bản sao của nó vào layer tạm thời và đảm bảo nó ở trên cùng
-      if (frameNode) {
-        const tempFrame = frameNode.clone({
-          id: 'frame',
-          x: frameNode.x(),
-          y: frameNode.y(),
-          scaleX: frameNode.scaleX(),
-          scaleY: frameNode.scaleY(),
-          rotation: frameNode.rotation(),
-          draggable: false,
-          listening: false
-        });
-        tempLayer.add(tempFrame);
-        tempFrame.moveToTop();
-      }
+      const tempFrame = frameNode.clone({
+        x: frameRect.x - boundingBox.x,
+        y: frameRect.y - boundingBox.y,
+        draggable: false,
+        listening: false
+      });
 
-      // Render layer tạm thời
+      // Thêm avatar và frame vào layer tạm thời
+      tempLayer.add(tempAvatar);
+      tempLayer.add(tempFrame);
+
+      // Đảm bảo frame ở trên cùng
+      tempFrame.moveToTop();
+
+      // Render layer
       tempLayer.draw();
 
       // Xuất hình ảnh từ stage tạm thời

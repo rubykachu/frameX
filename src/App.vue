@@ -3,19 +3,25 @@
     <Header />
 
     <main class="container mx-auto px-4 py-8 flex-1">
-      <!-- Nội dung chính -->
-      <div class="flex flex-col md:flex-row gap-6">
-        <Sidebar
-          @select-frame="handleSelectFrame"
-          @upload-frame="handleFrameUpload"
-        />
+      <!-- Responsive layout with improved space distribution -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Sidebar with improved width on larger screens -->
+        <div class="lg:col-span-4 xl:col-span-3">
+          <Sidebar
+            @select-frame="handleSelectFrame"
+            @upload-frame="handleFrameUpload"
+          />
+        </div>
 
-        <ImageEditor
-          ref="editorRef"
-          :initial-frame="initialFrame"
-          @frame-selected="handleFrameSelected"
-          @avatar-uploaded="handleAvatarUploaded"
-        />
+        <!-- Image Editor with responsive width -->
+        <div class="lg:col-span-8 xl:col-span-9">
+          <ImageEditor
+            ref="editorRef"
+            :initial-frame="initialFrame"
+            @frame-selected="handleFrameSelected"
+            @avatar-uploaded="handleAvatarUploaded"
+          />
+        </div>
       </div>
     </main>
 
