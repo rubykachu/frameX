@@ -3,30 +3,6 @@
     <div class="p-4">
       <h2 class="text-lg font-semibold text-gray-800 mb-4">Frame Gallery</h2>
 
-      <!-- Frame Search/URL Input -->
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Frame URL
-        </label>
-        <div class="flex">
-          <input
-            type="text"
-            v-model="frameUrl"
-            placeholder="https://example.com/frame.png"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <button
-            @click="loadFromUrl"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-r-md transition-colors"
-            :disabled="!isValidUrl"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
       <!-- Upload Frame -->
       <div class="mb-6">
         <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -108,18 +84,7 @@
 import { ref, computed, onMounted } from 'vue';
 
 // Emits
-const emit = defineEmits(['select-frame', 'upload-frame', 'load-from-url']);
-
-// Frame URL input
-const frameUrl = ref('');
-const isValidUrl = computed(() => {
-  try {
-    new URL(frameUrl.value);
-    return frameUrl.value.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
-  } catch (_) {
-    return false;
-  }
-});
+const emit = defineEmits(['select-frame', 'upload-frame']);
 
 // Categories
 const categories = ref([
@@ -190,13 +155,6 @@ const onFrameSelected = (event) => {
   const file = event.target.files[0];
   if (file) {
     emit('upload-frame', file);
-  }
-};
-
-const loadFromUrl = () => {
-  if (isValidUrl.value) {
-    emit('load-from-url', frameUrl.value);
-    frameUrl.value = ''; // Reset after submitting
   }
 };
 
