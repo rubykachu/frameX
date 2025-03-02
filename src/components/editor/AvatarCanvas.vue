@@ -1,6 +1,6 @@
 <template>
   <!-- Layout Container -->
-  <div class="flex gap-4" ref="editorContainer">
+  <div class="flex gap-4 h-full" ref="editorContainer">
     <!-- Canvas Area -->
     <div class="relative aspect-square bg-gray-100 rounded-lg flex-1 border border-gray-100">
       <div class="absolute inset-0" ref="stageContainer">
@@ -65,17 +65,87 @@
                 y: 0,
                 width: stageConfig.width,
                 height: stageConfig.height,
-                fill: 'rgba(0,0,0,0.6)',
+                fill: 'rgba(255,255,255,0)',
                 listening: false
               }"
             />
-            <v-circle
+
+            <!-- Horizontal grid lines -->
+            <v-line
+              v-for="(_, index) in Array(20)"
+              :key="`h-${index}`"
               :config="{
-                x: stageConfig.width / 2,
-                y: stageConfig.height / 2,
-                radius: Math.min(safeArea.width, safeArea.height) / 2,
-                fill: 'black',
-                globalCompositeOperation: 'destination-out',
+                points: [
+                  0,
+                  (index + 1) * (stageConfig.height / 20),
+                  stageConfig.width,
+                  (index + 1) * (stageConfig.height / 20)
+                ],
+                stroke: 'rgba(200, 200, 200, 0.4)',
+                strokeWidth: 1,
+                dash: [5, 5],
+                listening: false
+              }"
+            />
+
+            <!-- Vertical grid lines -->
+            <v-line
+              v-for="(_, index) in Array(20)"
+              :key="`v-${index}`"
+              :config="{
+                points: [
+                  (index + 1) * (stageConfig.width / 20),
+                  0,
+                  (index + 1) * (stageConfig.width / 20),
+                  stageConfig.height
+                ],
+                stroke: 'rgba(200, 200, 200, 0.4)',
+                strokeWidth: 1,
+                dash: [5, 5],
+                listening: false
+              }"
+            />
+
+            <!-- Center lines (slightly darker) -->
+            <v-line
+              :config="{
+                points: [
+                  0,
+                  stageConfig.height / 2,
+                  stageConfig.width,
+                  stageConfig.height / 2
+                ],
+                stroke: 'rgba(150, 150, 150, 0.7)',
+                strokeWidth: 1,
+                dash: [5, 5],
+                listening: false
+              }"
+            />
+            <v-line
+              :config="{
+                points: [
+                  stageConfig.width / 2,
+                  0,
+                  stageConfig.width / 2,
+                  stageConfig.height
+                ],
+                stroke: 'rgba(150, 150, 150, 0.5)',
+                strokeWidth: 1,
+                dash: [5, 5],
+                listening: false
+              }"
+            />
+
+            <!-- Frame boundary indicator (based on safe area) -->
+            <v-rect
+              :config="{
+                x: (stageConfig.width - safeArea.width) / 2,
+                y: (stageConfig.height - safeArea.height) / 2,
+                width: safeArea.width,
+                height: safeArea.height,
+                stroke: 'rgba(100, 100, 100, 0.1)',
+                strokeWidth: 2,
+                dash: [10, 5],
                 listening: false
               }"
             />

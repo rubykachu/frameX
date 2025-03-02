@@ -44,111 +44,117 @@
           </button>
         </div>
 
-        <!-- Horizontal scrolling categories for mobile/compact view -->
-        <div class="overflow-x-auto pb-2 -mx-1 hide-scrollbar">
-          <div class="flex flex-wrap gap-2 px-1">
-            <button
-              v-for="(category, index) in displayedCategories"
-              :key="index"
-              @click="selectCategory(category)"
-              class="whitespace-nowrap px-3 py-1.5 text-sm rounded-md transition-colors flex-shrink-0"
-              :class="selectedCategory === category.id ? 'bg-indigo-100 text-indigo-600 font-medium' : 'hover:bg-gray-100 text-gray-700 border border-gray-200'"
-            >
-              {{ category.name }}
-            </button>
-          </div>
+        <!-- Simplified categories list -->
+        <div class="flex flex-wrap gap-2">
+          <span
+            v-for="(category, index) in displayedCategories"
+            :key="index"
+            @click="selectCategory(category)"
+            class="cursor-pointer text-sm transition-colors"
+            :class="selectedCategory === category.id ? 'text-indigo-600 font-medium' : 'text-gray-600 hover:text-indigo-500'"
+          >
+            {{ category.name }}{{ index < displayedCategories.length - 1 ? ',' : '' }}
+          </span>
         </div>
       </div>
 
       <!-- Available Frames Grid with Virtualized Scrolling -->
-      <div class="flex-1 overflow-y-auto p-4">
-        <div class="flex justify-between items-center mb-3 sticky top-0 bg-white pb-2 z-10">
-          <h3 class="text-sm font-medium text-gray-700">
-            Available Frames
-            <span class="text-xs text-gray-500 ml-1">({{ filteredFrames.length }})</span>
-          </h3>
+      <div class="flex-1 overflow-hidden flex flex-col">
+        <div class="sticky top-0 bg-white p-4 pb-2 z-10 border-b border-gray-200">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-medium text-gray-700">
+              Available Frames
+              <span class="text-xs text-gray-500 ml-1">({{ filteredFrames.length }})</span>
+            </h3>
 
-          <!-- Grid size controls -->
-          <div class="flex items-center space-x-2">
-            <button
-              @click="gridCols = 2"
-              class="p-1 rounded hover:bg-gray-100"
-              :class="gridCols === 2 ? 'bg-gray-100 text-indigo-600' : 'text-gray-500'"
-              title="2 columns"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button
-              @click="gridCols = 3"
-              class="p-1 rounded hover:bg-gray-100"
-              :class="gridCols === 3 ? 'bg-gray-100 text-indigo-600' : 'text-gray-500'"
-              title="3 columns"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
-              </svg>
-            </button>
-            <button
-              @click="gridCols = 4"
-              class="p-1 rounded hover:bg-gray-100"
-              :class="gridCols === 4 ? 'bg-gray-100 text-indigo-600' : 'text-gray-500'"
-              title="4 columns"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
-              </svg>
-            </button>
+            <!-- Grid size controls -->
+            <div class="flex items-center space-x-2">
+              <button
+                @click="gridCols = 2"
+                class="p-1 rounded hover:bg-gray-100"
+                :class="gridCols === 2 ? 'bg-gray-100 text-indigo-600' : 'text-gray-500'"
+                title="2 columns"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                @click="gridCols = 3"
+                class="p-1 rounded hover:bg-gray-100"
+                :class="gridCols === 3 ? 'bg-gray-100 text-indigo-600' : 'text-gray-500'"
+                title="3 columns"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                @click="gridCols = 4"
+                class="p-1 rounded hover:bg-gray-100"
+                :class="gridCols === 4 ? 'bg-gray-100 text-indigo-600' : 'text-gray-500'"
+                title="4 columns"
+              >
+                <!-- Changed from + to - icon for collapsed layout -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  <!-- Add horizontal line (minus sign) instead of plus sign -->
+                  <path d="M14 13h2a1 1 0 010 2h-2a1 1 0 010-2z" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Dynamic Grid Layout with Responsive Columns -->
-        <div class="grid gap-2" :class="`grid-cols-${gridCols}`">
-          <div
-            v-for="(frame, index) in filteredFrames"
-            :key="index"
-            @click="previewFrame(frame)"
-            class="relative aspect-square border rounded-md cursor-pointer hover:border-indigo-500 transition-colors p-1 group"
-            :class="selectedFrameId === frame.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'"
-          >
-            <!-- Frame Thumbnail -->
-            <img
-              :src="frame.thumbnail"
-              :alt="frame.name || 'Frame thumbnail'"
-              class="w-full h-full object-contain"
-              loading="lazy"
-            />
-
-            <!-- Hover Overlay with Frame Name -->
-            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-end justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
-              <div class="text-white text-xs font-medium p-1 text-center w-full bg-black bg-opacity-60 truncate">
-                {{ frame.name }}
-              </div>
-            </div>
-
-            <!-- Selected Indicator -->
-            <div v-if="selectedFrameId === frame.id" class="absolute top-1 right-1">
-              <div class="bg-indigo-500 rounded-full p-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- No frames message -->
-          <div v-if="filteredFrames.length === 0" class="col-span-full py-8 text-center text-gray-500 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p>No frames available in this category</p>
-            <button
-              @click="selectedCategory = 'all'"
-              class="mt-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium"
+        <!-- Frame grid with fixed height and scroll -->
+        <div class="overflow-y-auto p-4" style="max-height: 400px;">
+          <!-- Dynamic Grid Layout with Responsive Columns -->
+          <div class="grid gap-2" :class="`grid-cols-${gridCols}`">
+            <div
+              v-for="(frame, index) in filteredFrames"
+              :key="index"
+              @click="previewFrame(frame)"
+              class="relative aspect-square border rounded-md cursor-pointer hover:border-indigo-500 transition-colors p-1 group"
+              :class="selectedFrameId === frame.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'"
             >
-              View all frames
-            </button>
+              <!-- Frame Thumbnail -->
+              <img
+                :src="frame.thumbnail"
+                :alt="frame.name || 'Frame thumbnail'"
+                class="w-full h-full object-contain"
+                loading="lazy"
+              />
+
+              <!-- Hover Overlay with Frame Name -->
+              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-end justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                <div class="text-white text-xs font-medium p-1 text-center w-full bg-black bg-opacity-60 truncate">
+                  {{ frame.name }}
+                </div>
+              </div>
+
+              <!-- Selected Indicator -->
+              <div v-if="selectedFrameId === frame.id" class="absolute top-1 right-1">
+                <div class="bg-indigo-500 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- No frames message -->
+            <div v-if="filteredFrames.length === 0" class="col-span-full py-8 text-center text-gray-500 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p>No frames available in this category</p>
+              <button
+                @click="selectedCategory = 'all'"
+                class="mt-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium"
+              >
+                View all frames
+              </button>
+            </div>
           </div>
         </div>
       </div>

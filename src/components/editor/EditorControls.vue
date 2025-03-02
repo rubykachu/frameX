@@ -1,8 +1,8 @@
 <template>
   <div class="flex space-x-4 mb-6 mt-1 mt-5">
-    <!-- Kiểm tra xem có avatar và background không -->
+    <!-- Check if there is an avatar and background -->
     <div v-if="hasAvatarAndFrame">
-      <!-- Các nút hiển thị - đã loại bỏ nút cắt ảnh -->
+      <!-- Display buttons - removed image cut button -->
       <div class="flex space-x-4">
         <button
           class="btn btn-outline flex items-center justify-center gap-2 px-6 py-3 text-base"
@@ -11,7 +11,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
           </svg>
-          Chọn ảnh khác
+          Choose another image
         </button>
 
         <button
@@ -21,7 +21,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
-          Tải xuống
+          Download
         </button>
       </div>
     </div>
@@ -47,7 +47,7 @@ const emit = defineEmits([
   'export'
 ])
 
-// Kiểm tra xem có cả avatar và frame không
+// Check if there is an avatar and frame
 const hasAvatarAndFrame = computed(() => {
   return props.avatar && props.avatar.image && props.background && props.background.image
 })

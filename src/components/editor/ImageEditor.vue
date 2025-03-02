@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1">
+  <div class="flex-1 h-full">
     <!-- Avatar Canvas -->
     <AvatarCanvas
       ref="canvasRef"
