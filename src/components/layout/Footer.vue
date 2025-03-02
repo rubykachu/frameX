@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between">
         <!-- Copyright -->
         <p class="text-sm text-gray-500">
-          &copy; {{ copyrightYears(2025) }} FrameX
+          &copy; {{ copyrightYears(2025) }} FrameX2
         </p>
 
         <!-- Developer Info with Social -->

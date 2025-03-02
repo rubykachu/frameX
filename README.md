@@ -1,4 +1,4 @@
-# Combine Image JS
+# FrameX2
 
 A web application for combining user avatars with decorative frames.
 
@@ -25,22 +25,42 @@ To add custom frames to the application:
 
 For detailed instructions, see the [Frame Assets README](public/assets/frames/README.md).
 
-## Development
+## Development Setup
 
-```bash
-# Install dependencies
-npm install
+To set up the project for development, follow these steps:
 
-# Start development server
-npm run dev
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd FrameX2
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+   This will start the application on a local development server. You can access it by navigating to `http://localhost:3000` in your web browser.
 
 ## Building for Production
 
-```bash
-# Build for production
-npm run build
+To build the application for production, use the following command:
 
-# Preview production build
+```bash
+npm run build
+```
+
+To preview the production build locally, run:
+
+```bash
 npm run preview
 ```
+
+## Author
+
+Created by [Author Name].
