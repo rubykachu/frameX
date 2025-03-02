@@ -1,97 +1,82 @@
 {
   "categories": [
     { "id": "all", "name": "All Frames" },
-    { "id": "holidays", "name": "Holidays" },
-    { "id": "business", "name": "Business" },
-    { "id": "social", "name": "Social Media" },
-    { "id": "personal", "name": "Personal" },
-    { "id": "events", "name": "Events" },
-    { "id": "decorative", "name": "Decorative" }
+    { "id": "spring", "name": "Spring" },
+    { "id": "summer", "name": "Summer" },
+    { "id": "autumn", "name": "Autumn" },
+    { "id": "border", "name": "Border" }
   ],
   "frames": [
     {
-      "id": "frame1",
-      "name": "Social Frame",
-      "thumbnail": "https://i.imgur.com/XiOnbVa.png",
-      "src": "https://i.imgur.com/XiOnbVa.png",
-      "category": "social"
-    },
-    {
       "id": "frame2",
-      "name": "Business Frame",
-      "thumbnail": "https://i.imgur.com/KA3xsmR.jpg",
-      "src": "https://i.imgur.com/KA3xsmR.jpg",
-      "category": "business"
+      "name": "Border 2",
+      "thumbnail": "https://i.imgur.com/0r1X0Fo.png",
+      "src": "https://i.imgur.com/0r1X0Fo.png",
+      "category": "border"
     },
     {
       "id": "frame3",
-      "name": "Personal Frame",
-      "thumbnail": "https://i.imgur.com/0r1X0Fo.png",
-      "src": "https://i.imgur.com/0r1X0Fo.png",
-      "category": "personal"
+      "name": "Summer 1",
+      "thumbnail": "https://i.imgur.com/XiOnbVa.png",
+      "src": "https://i.imgur.com/XiOnbVa.png",
+      "category": "summer"
     },
     {
-      "id": "local-frame1",
-      "name": "Best Summer Frame",
-      "thumbnail": "frame-best-summer.png",
-      "src": "frame-best-summer.png",
-      "category": "holidays"
+      "id": "frame4",
+      "name": "Summer 2",
+      "thumbnail": "summer-1.png",
+      "src": "summer-1.png",
+      "category": "summer"
     },
     {
-      "id": "holiday-christmas",
-      "name": "Christmas Frame",
-      "thumbnail": "christmas.png",
-      "src": "christmas.png",
-      "category": "holidays"
+      "id": "frame6",
+      "name": "Spring 1",
+      "thumbnail": "spring-1.png",
+      "src": "spring-1.png",
+      "category": "spring"
     },
     {
-      "id": "holiday-newyear",
-      "name": "New Year Frame",
-      "thumbnail": "newyear.png",
-      "src": "newyear.png",
-      "category": "holidays"
+      "id": "frame7",
+      "name": "Spring 2",
+      "thumbnail": "spring-2.png",
+      "src": "spring-2.png",
+      "category": "spring"
     },
     {
-      "id": "business-corporate",
-      "name": "Corporate Frame",
-      "thumbnail": "corporate.png",
-      "src": "corporate.png",
-      "category": "business"
+      "id": "frame8",
+      "name": "Spring 3",
+      "thumbnail": "spring-3.jpeg",
+      "src": "spring-3.jpeg",
+      "category": "spring"
     },
     {
-      "id": "business-professional",
-      "name": "Professional Frame",
-      "thumbnail": "professional.png",
-      "src": "professional.png",
-      "category": "business"
+      "id": "frame9",
+      "name": "Autumn 1",
+      "thumbnail": "autumn-1.png",
+      "src": "autumn-1.png",
+      "category": "autumn"
     },
     {
-      "id": "social-instagram",
-      "name": "Instagram Frame",
-      "thumbnail": "instagram.png",
-      "src": "instagram.png",
-      "category": "social"
+      "id": "frame10",
+      "name": "Autumn 2",
+      "thumbnail": "autumn-2.png",
+      "src": "autumn-2.png",
+      "category": "autumn"
     },
     {
-      "id": "personal-birthday",
-      "name": "Birthday Frame",
-      "thumbnail": "birthday.png",
-      "src": "birthday.png",
-      "category": "personal"
+      "id": "frame11",
+      "name": "Autumn 3",
+      "thumbnail": "autumn-3.jpeg",
+      "src": "autumn-3.jpeg",
+      "category": "autumn"
     },
     {
-      "id": "events-wedding",
-      "name": "Wedding Frame",
-      "thumbnail": "wedding.png",
-      "src": "wedding.png",
-      "category": "events"
-    },
-    {
-      "id": "decorative-floral",
-      "name": "Floral Frame",
-      "thumbnail": "floral.png",
-      "src": "floral.png",
-      "category": "decorative"
+      "id": "frame12",
+      "name": "Autumn 4",
+      "thumbnail": "autumn-4.jpeg",
+      "src": "autumn-4.jpeg",
+      "category": "autumn"
     }
   ]
 }
+

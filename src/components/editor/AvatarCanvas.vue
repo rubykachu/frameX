@@ -12,7 +12,7 @@
           @touchstart="handleTouchStart"
         >
           <v-layer ref="mainLayer">
-            <!-- Avatar Image (Below) -->
+            <!-- Avatar Image -->
             <v-image
               v-if="avatar.image"
               :config="{
@@ -33,7 +33,7 @@
               @transformend="handleTransform('avatar')"
             />
 
-            <!-- Frame Image (Above) -->
+            <!-- Frame Image -->
             <v-image
               v-if="background.image"
               :config="{
@@ -219,19 +219,28 @@
               {{ background.image.width }}x{{ background.image.height }}px
             </div>
           </div>
-          <button
-            class="p-1 hover:bg-teal-100 rounded"
-            @click.stop="toggleLayerVisibility('frame')"
-          >
-            <svg v-if="layerVisibility.frame" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
-              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-            </svg>
-          </button>
+          <div class="flex items-center space-x-1">
+            <!-- Layer order indicator -->
+            <span class="text-xs px-1.5 py-0.5 rounded-full"
+                  :class="layerOrder.frame > layerOrder.avatar ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'">
+              {{ layerOrder.frame > layerOrder.avatar ? 'Top' : 'Bottom' }}
+            </span>
+            <!-- Layer visibility toggle -->
+            <button
+              class="p-1 hover:bg-teal-100 rounded"
+              @click.stop="toggleLayerVisibility('frame')"
+              title="Toggle visibility"
+            >
+              <svg v-if="layerVisibility.frame" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Avatar Layer -->
@@ -252,19 +261,70 @@
               {{ avatar.image.width }}x{{ avatar.image.height }}px
             </div>
           </div>
-          <button
-            class="p-1 hover:bg-teal-100 rounded"
-            @click.stop="toggleLayerVisibility('avatar')"
-          >
-            <svg v-if="layerVisibility.avatar" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
-              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-            </svg>
-          </button>
+          <div class="flex items-center space-x-1">
+            <!-- Layer order indicator -->
+            <span class="text-xs px-1.5 py-0.5 rounded-full"
+                  :class="layerOrder.avatar > layerOrder.frame ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'">
+              {{ layerOrder.avatar > layerOrder.frame ? 'Top' : 'Bottom' }}
+            </span>
+            <!-- Layer visibility toggle -->
+            <button
+              class="p-1 hover:bg-teal-100 rounded"
+              @click.stop="toggleLayerVisibility('avatar')"
+              title="Toggle visibility"
+            >
+              <svg v-if="layerVisibility.avatar" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="background.image || avatar.image">
+          <p class="text-xs text-gray-600 mt-1">Select a layer to scale or move. Click the eye icon to toggle visibility.</p>
+        </div>
+
+        <!-- Layer Order Controls -->
+        <div class="mt-4 pt-4 border-t border-gray-200" v-if="avatar.image && background.image">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Layer Order</h3>
+          <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+            <div class="flex flex-col items-center">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 mb-1"
+                   :class="{'border-blue-400': layerOrder.frame > layerOrder.avatar}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm0 2h12v7H4V5z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-600">Frame</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+              <button
+                @click="swapLayers"
+                class="p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 transition-colors"
+                title="Swap layer order"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="flex flex-col items-center">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 mb-1"
+                   :class="{'border-blue-400': layerOrder.avatar > layerOrder.frame}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-600">Avatar</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -303,7 +363,8 @@ const emit = defineEmits([
   'update-position',
   'update-transform',
   'upload-avatar',
-  'layer-visibility-change'
+  'layer-visibility-change',
+  'layer-order-change'
 ])
 
 // Refs
@@ -320,12 +381,29 @@ const layerVisibility = reactive({
   avatar: true
 })
 
+// Layer order state
+const layerOrder = reactive({
+  frame: 1,  // Higher z-index (on top by default)
+  avatar: 0  // Lower z-index (bottom by default)
+})
+
+// Watch for layer order changes
+watch(layerOrder, () => {
+  nextTick(() => {
+    applyLayerOrder();
+  });
+}, { deep: true });
+
 // Methods
 const handleStageClick = (e) => {
   // Only deselect when clicking on stage background
   if (e.target === stage.value.getNode()) {
-    selectedId.value = null
-    emit('stage-click', e, stage.value)
+    selectedId.value = null;
+
+    // Ensure layer order is maintained after deselection
+    applyLayerOrder();
+
+    emit('stage-click', e, stage.value);
   }
 }
 
@@ -374,13 +452,8 @@ const handleDragMove = (type) => {
     y: newY
   });
 
-  // Ensure frame stays on top
-  if (type === 'avatar') {
-    const frameNode = stage.value.getNode().find('#frame')[0];
-    if (frameNode) {
-      frameNode.moveToTop();
-    }
-  }
+  // Apply layer order
+  applyLayerOrder();
 
   emit('update-position', type, node);
   node.getLayer().batchDraw();
@@ -399,13 +472,8 @@ const updatePosition = (type) => {
   // Remove dragging effect
   node.setAttr('dragging', false);
 
-  // Ensure frame stays on top after drag
-  if (type === 'avatar') {
-    const frameNode = stage.value.getNode().find('#frame')[0];
-    if (frameNode) {
-      frameNode.moveToTop();
-    }
-  }
+  // Apply layer order
+  applyLayerOrder();
 
   emit('update-position', type, node);
   node.getLayer().batchDraw();
@@ -414,6 +482,10 @@ const updatePosition = (type) => {
 const handleTransform = (type) => {
   const node = stage.value.getNode().find(`#${type}`)[0];
   if (!node) return;
+
+  // Apply layer order
+  applyLayerOrder();
+
   emit('update-transform', type, node);
 }
 
@@ -432,6 +504,9 @@ const handleLayerSelect = (type) => {
       transformer.nodes([]);
       mainLayer.value.getNode().batchDraw();
     }
+
+    // Ensure layer order is maintained after deselection
+    applyLayerOrder();
     return;
   }
 
@@ -441,6 +516,10 @@ const handleLayerSelect = (type) => {
 
   if (node && transformer) {
     transformer.nodes([node]);
+
+    // Ensure layer order is maintained after selection
+    applyLayerOrder();
+
     mainLayer.value.getNode().batchDraw();
   }
 }
@@ -459,6 +538,44 @@ const toggleLayerVisibility = (type) => {
 
     mainLayer.value.getNode().batchDraw()
     emit('layer-visibility-change', { type, visible: newVisibility })
+  }
+}
+
+const swapLayers = () => {
+  // Swap the layer order values
+  const temp = layerOrder.frame;
+  layerOrder.frame = layerOrder.avatar;
+  layerOrder.avatar = temp;
+
+  // Apply the new layer order
+  applyLayerOrder();
+
+  // Emit event for layer order change
+  emit('layer-order-change', { frame: layerOrder.frame, avatar: layerOrder.avatar });
+}
+
+// Add this new function after the swapLayers function
+const applyLayerOrder = () => {
+  // Get the nodes
+  const frameNode = stage.value.getNode().find('#frame')[0];
+  const avatarNode = stage.value.getNode().find('#avatar')[0];
+
+  if (frameNode && avatarNode) {
+    // Move the appropriate node to top based on the layer order
+    if (layerOrder.frame > layerOrder.avatar) {
+      frameNode.moveToTop();
+    } else {
+      avatarNode.moveToTop();
+    }
+
+    // Make sure transformer stays on top
+    const transformer = stage.value.getNode().find('Transformer')[0];
+    if (transformer) {
+      transformer.moveToTop();
+    }
+
+    // Redraw the layer
+    mainLayer.value.getNode().batchDraw();
   }
 }
 
@@ -485,6 +602,9 @@ const handleOutsideClick = (e) => {
       transformer.nodes([]);
       mainLayer.value?.getNode()?.batchDraw();
     }
+
+    // Đảm bảo thứ tự layer được duy trì sau khi bỏ chọn
+    applyLayerOrder();
 
     // Thông báo cho component cha
     emit('stage-click', null, stage.value);
@@ -517,15 +637,16 @@ onMounted(() => {
         }
       })
     }
+
+    // Ensure layer order is maintained when selection changes
+    nextTick(() => {
+      applyLayerOrder();
+    });
   })
 
-  // Ensure frame is always rendered above avatar
+  // Apply layer ordering based on layerOrder values
   nextTick(() => {
-    const frameNode = stage.value?.getNode()?.find('#frame')?.[0]
-    if (frameNode) {
-      frameNode.moveToTop()
-      mainLayer.value.getNode().draw()
-    }
+    applyLayerOrder();
   })
 })
 

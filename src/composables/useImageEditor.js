@@ -38,6 +38,12 @@ export function useImageEditor() {
     }
   })
 
+  // Layer order state
+  const layerOrder = reactive({
+    frame: 1,  // Higher z-index (on top by default)
+    avatar: 0  // Lower z-index (bottom by default)
+  })
+
   // Add safe area state
   const safeArea = reactive({
     width: FB_AVATAR_SIZE,
@@ -363,8 +369,12 @@ export function useImageEditor() {
       tempLayer.add(tempAvatar);
       tempLayer.add(tempFrame);
 
-      // Đảm bảo frame ở trên cùng
-      tempFrame.moveToTop();
+      // Đảm bảo thứ tự layer đúng theo layerOrder
+      if (layerOrder.frame > layerOrder.avatar) {
+        tempFrame.moveToTop();
+      } else {
+        tempAvatar.moveToTop();
+      }
 
       // Render layer
       tempLayer.draw();
@@ -476,6 +486,17 @@ export function useImageEditor() {
     }
   };
 
+  // New method to handle layer order changes
+  const updateLayerOrder = (order) => {
+    if (!order || typeof order !== 'object') return;
+
+    // Update the layer order state
+    if (typeof order.frame === 'number') layerOrder.frame = order.frame;
+    if (typeof order.avatar === 'number') layerOrder.avatar = order.avatar;
+
+    console.log('Layer order updated:', layerOrder);
+  }
+
   return {
     stageConfig,
     background,
@@ -483,6 +504,7 @@ export function useImageEditor() {
     safeArea,
     selectedId,
     transformerConfig,
+    layerOrder,
     avatarScale,
     updateStageSize,
     loadImage,
@@ -497,6 +519,7 @@ export function useImageEditor() {
     handleStageClick,
     updateImageStyles,
     handleSelectFrame,
-    handleFrameFromUrl
+    handleFrameFromUrl,
+    updateLayerOrder
   }
 }

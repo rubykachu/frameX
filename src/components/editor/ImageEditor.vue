@@ -14,6 +14,7 @@
       @update-transform="handleUpdateTransform"
       @upload-avatar="handleUploadAvatar"
       @layer-visibility-change="handleLayerVisibilityChange"
+      @layer-order-change="handleLayerOrderChange"
     />
 
     <!-- Editor Controls -->
@@ -78,6 +79,11 @@ const handleUpdateTransform = (type, node) => {
 
 const handleLayerVisibilityChange = ({ type, visible }) => {
   console.log(`Layer ${type} visibility changed to ${visible}`)
+}
+
+const handleLayerOrderChange = (order) => {
+  console.log(`Layer order changed to:`, order)
+  editor.updateLayerOrder(order)
 }
 
 const handleUploadAvatar = () => {
