@@ -98,11 +98,12 @@
 
           <!-- Instruction text -->
           <h3 class="text-xl font-medium text-gray-800 mb-2">
-            {{ !background.image ? 'Chọn khung ảnh' : 'Thêm ảnh đại diện của bạn' }}
+            {{ !background.image ? 'Choose a Frame' : 'Upload Your Avatar' }}
           </h3>
           <p class="text-gray-600 mb-6">
-            {{ !background.image ? 'Chọn một khung từ gallery hoặc tải lên khung của bạn từ sidebar bên trái' : 'Tải lên ảnh đại diện để bắt đầu chỉnh sửa' }}
+            {{ !background.image ? 'Select a frame from the gallery or upload your own from the left sidebar' : 'Upload your avatar to start editing' }}
           </p>
+
 
           <!-- Action buttons -->
           <div class="flex flex-col sm:flex-row gap-3 justify-center">
@@ -114,7 +115,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
               </svg>
-              Chọn ảnh
+              Choose Avatar
             </button>
           </div>
         </div>
@@ -122,15 +123,17 @@
     </div>
 
     <!-- Layer Panel -->
-    <div class="w-64 bg-white rounded-lg p-4 border border-gray-200 layer-panel">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-medium text-gray-900">Layers</h3>
+    <!-- <div class="w-64 bg-white rounded-lg p-4 border border-gray-200 layer-panel"> -->
+    <div class="w-64 bg-white border border-gray-200 rounded-lg layer-panel">
+      <div class="p-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-800">Layers</h2>
       </div>
 
       <!-- Layer List -->
-      <div class="space-y-2">
+      <div class="space-y-2 p-4">
         <!-- Frame Layer -->
         <div
+          v-if="background.image"
           class="flex items-center p-2 rounded cursor-pointer"
           :class="{ 'bg-teal-50 ring-1 ring-teal-500': selectedId === 'frame' }"
           @click="handleLayerSelect('frame')"
@@ -163,6 +166,7 @@
 
         <!-- Avatar Layer -->
         <div
+          v-if="avatar.image"
           class="flex items-center p-2 rounded cursor-pointer"
           :class="{ 'bg-teal-50 ring-1 ring-teal-500': selectedId === 'avatar' }"
           @click="handleLayerSelect('avatar')"

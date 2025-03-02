@@ -2,8 +2,8 @@
   <header class="bg-white shadow">
     <div class="container mx-auto px-4 py-6">
       <a class="flex items-center space-x-2" href="./">
-        <img src="/logo.svg" alt="Logo" class="header-logo" />
-        <h1 class="text-xl font-bold text-gray-800">Image Frame Editor</h1>
+        <img src="/framex.png" alt="FrameX" class="header-logo" />
+        <h1 class="text-xl font-bold text-gray-800">FrameX</h1>
       </a>
     </div>
   </header>

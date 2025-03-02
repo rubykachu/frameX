@@ -2,7 +2,7 @@
   <aside class="bg-white border border-gray-200 rounded-lg flex flex-col h-full">
     <!-- Header -->
     <div class="p-4 border-b border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-800">Frame Gallery</h2>
+      <h2 class="text-lg font-semibold text-gray-800">Frame Galleries</h2>
     </div>
 
     <!-- Scrollable Content Area -->
@@ -10,7 +10,7 @@
       <!-- Upload Frame -->
       <div class="p-4 border-b border-gray-200">
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Upload Your Frame
+          Upload Frame
         </label>
         <div class="relative">
           <input

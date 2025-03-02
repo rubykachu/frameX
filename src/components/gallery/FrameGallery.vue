@@ -134,7 +134,7 @@ import { ref, computed } from 'vue'
 const props = defineProps({
   title: {
     type: String,
-    default: 'Frame Gallery'
+    default: 'Frame Galleries'
   },
   frames: {
     type: Array,
