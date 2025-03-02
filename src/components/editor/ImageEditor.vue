@@ -7,27 +7,20 @@
       :background="editor.background"
       :avatar="editor.avatar"
       :safe-area="editor.safeArea"
-      :crop-mode="editor.cropMode"
-      :crop-config="editor.cropConfig"
       :transformer-config="editor.transformerConfig"
       @update-stage-size="handleUpdateStageSize"
       @stage-click="handleStageClick"
       @update-position="handleUpdatePosition"
       @update-transform="handleUpdateTransform"
-      @update-crop-position="handleUpdateCropPosition"
-      @update-crop-transform="handleUpdateCropTransform"
       @upload-avatar="handleUploadAvatar"
+      @layer-visibility-change="handleLayerVisibilityChange"
     />
 
     <!-- Editor Controls -->
     <EditorControls
       :avatar="editor.avatar"
       :background="editor.background"
-      :crop-mode="editor.cropMode"
       @upload-avatar="handleUploadAvatar"
-      @start-crop="handleStartCrop"
-      @apply-crop="handleApplyCrop"
-      @cancel-crop="handleCancelCrop"
       @export="handleExport"
     />
 
@@ -83,12 +76,8 @@ const handleUpdateTransform = (type, node) => {
   editor.updateTransform(type, node)
 }
 
-const handleUpdateCropPosition = (node) => {
-  editor.updateCropPosition(node)
-}
-
-const handleUpdateCropTransform = (node) => {
-  editor.updateCropTransform(node)
+const handleLayerVisibilityChange = ({ type, visible }) => {
+  console.log(`Layer ${type} visibility changed to ${visible}`)
 }
 
 const handleUploadAvatar = () => {
@@ -102,18 +91,6 @@ const handleAvatarFileSelected = async (file) => {
   } catch (error) {
     console.error('Error uploading avatar:', error)
   }
-}
-
-const handleStartCrop = () => {
-  editor.startCrop(canvasRef.value.stage)
-}
-
-const handleApplyCrop = () => {
-  editor.applyCrop(canvasRef.value.stage)
-}
-
-const handleCancelCrop = () => {
-  editor.cancelCrop()
 }
 
 const handleExport = (format) => {
@@ -147,11 +124,14 @@ const handleFrameFromUrl = async (url) => {
 
 // Lifecycle hooks
 onMounted(() => {
-  // Create temporary container for export
-  const tempContainer = document.createElement('div')
-  tempContainer.id = 'temp-container'
-  tempContainer.style.display = 'none'
-  document.body.appendChild(tempContainer)
+  // Tạo container tạm thời cho việc xuất hình ảnh
+  let tempContainer = document.getElementById('temp-container')
+  if (!tempContainer) {
+    tempContainer = document.createElement('div')
+    tempContainer.id = 'temp-container'
+    tempContainer.style.display = 'none'
+    document.body.appendChild(tempContainer)
+  }
 
   // Load initial frame if provided
   if (props.initialFrame) {

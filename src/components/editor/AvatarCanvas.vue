@@ -51,35 +51,9 @@
 
             <!-- Transformer for selected object -->
             <v-transformer
-              v-if="selectedId && !cropMode"
+              v-if="selectedId"
               ref="transformer"
               :config="transformerConfig"
-            />
-
-            <!-- Crop Rectangle -->
-            <v-transformer
-              v-if="cropMode"
-              ref="cropTransformer"
-              :config="{
-                ...transformerConfig,
-                enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
-                boundBoxFunc: (oldBox, newBox) => {
-                  if (newBox.width < 50 || newBox.height < 50) {
-                    return oldBox;
-                  }
-                  return newBox;
-                },
-                zIndex: 3
-              }"
-            />
-            <v-rect
-              v-if="cropMode"
-              :config="{
-                ...cropConfig,
-                id: 'crop'
-              }"
-              @dragend="updateCropPosition"
-              @transformend="updateCropTransform"
             />
           </v-layer>
 
@@ -243,14 +217,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  cropMode: {
-    type: Boolean,
-    default: false
-  },
-  cropConfig: {
-    type: Object,
-    required: true
-  },
   transformerConfig: {
     type: Object,
     required: true
@@ -262,8 +228,6 @@ const emit = defineEmits([
   'stage-click',
   'update-position',
   'update-transform',
-  'update-crop-position',
-  'update-crop-transform',
   'upload-avatar',
   'layer-visibility-change'
 ])
@@ -273,7 +237,6 @@ const stage = ref(null)
 const stageContainer = ref(null)
 const mainLayer = ref(null)
 const maskLayer = ref(null)
-const cropTransformer = ref(null)
 const selectedId = ref(null)
 
 // Layer visibility state
@@ -379,18 +342,6 @@ const handleTransform = (type) => {
   emit('update-transform', type, node);
 }
 
-const updateCropPosition = () => {
-  const cropNode = stage.value.getNode().find('#crop')[0]
-  if (!cropNode) return
-  emit('update-crop-position', cropNode)
-}
-
-const updateCropTransform = () => {
-  const cropNode = stage.value.getNode().find('#crop')[0]
-  if (!cropNode) return
-  emit('update-crop-transform', cropNode)
-}
-
 const handleMouseDown = () => {}
 const handleTouchStart = () => {}
 
@@ -455,18 +406,6 @@ onMounted(() => {
         if (node && transformer) {
           transformer.nodes([node])
           mainLayer.value.getNode().batchDraw()
-        }
-      })
-    }
-  })
-
-  // Watch for crop mode changes
-  watch(() => props.cropMode, (newValue) => {
-    if (newValue) {
-      nextTick(() => {
-        const cropNode = stage.value.getNode().find('#crop')[0]
-        if (cropNode && cropTransformer.value) {
-          cropTransformer.value.getNode().nodes([cropNode])
         }
       })
     }

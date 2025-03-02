@@ -104,31 +104,25 @@ const displayedCategories = computed(() => {
   return showAllCategories.value ? categories.value : categories.value.slice(0, 3);
 });
 
-// Sample frames data - in a real app, this would come from an API
+// Cập nhật mảng frames với URL Imgur thực tế
 const frames = ref([
   {
     id: 'frame1',
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+1',
-    src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+1',
+    thumbnail: 'https://i.imgur.com/XiOnbVa.png',
+    src: 'https://i.imgur.com/XiOnbVa.png',
     category: 'social'
   },
   {
     id: 'frame2',
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+2',
-    src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+2',
+    thumbnail: 'https://i.imgur.com/KA3xsmR.jpg',
+    src: 'https://i.imgur.com/KA3xsmR.jpg',
     category: 'business'
   },
   {
     id: 'frame3',
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+3',
-    src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+3',
+    thumbnail: 'https://i.imgur.com/0r1X0Fo.png',
+    src: 'https://i.imgur.com/0r1X0Fo.png',
     category: 'personal'
-  },
-  {
-    id: 'frame4',
-    thumbnail: 'https://via.placeholder.com/150/4f46e5/ffffff?text=Frame+4',
-    src: 'https://via.placeholder.com/800/4f46e5/ffffff?text=Frame+4',
-    category: 'events'
   }
 ]);
 
@@ -148,6 +142,7 @@ const selectCategory = (category) => {
 
 const selectFrame = (frame) => {
   selectedFrameId.value = frame.id;
+  console.log("Frame đã được chọn:", frame);
   emit('select-frame', frame);
 };
 

@@ -1,4 +1,5 @@
 import { ref, reactive, computed, nextTick } from 'vue'
+import Konva from 'konva'
 
 // Constants for Facebook avatar dimensions
 const FB_AVATAR_SIZE = 500 // Facebook recommends 500x500px
@@ -43,21 +44,6 @@ export function useImageEditor() {
     height: FB_AVATAR_SIZE,
     x: 0,
     y: 0
-  })
-
-  // Add crop state
-  const cropMode = ref(false)
-  const cropConfig = reactive({
-    visible: false,
-    x: 0,
-    y: 0,
-    width: FB_AVATAR_SIZE,
-    height: FB_AVATAR_SIZE,
-    stroke: '#0D9488',
-    strokeWidth: 2,
-    fill: 'rgba(0,0,0,0.3)',
-    draggable: true,
-    keepRatio: true
   })
 
   // Add selected node state
@@ -111,40 +97,50 @@ export function useImageEditor() {
 
   const loadImage = (file) => {
     return new Promise((resolve, reject) => {
-      if (!file || !file.type?.startsWith('image/')) {
-        reject(new Error('Invalid file type'))
-        return
+      // Nếu file là đối tượng Image đã tải, trả về luôn
+      if (file instanceof HTMLImageElement) {
+        resolve(file);
+        return;
       }
 
-      if (file.size > 20 * 1024 * 1024) {
-        reject(new Error('File size exceeds 20MB limit'))
-        return
+      // Kiểm tra file type chỉ khi file là File object
+      if (!file || (file instanceof File && !file.type?.startsWith('image/'))) {
+        reject(new Error('Invalid file type'));
+        return;
       }
 
-      const reader = new FileReader()
+      if (file instanceof File && file.size > 20 * 1024 * 1024) {
+        reject(new Error('File size exceeds 20MB limit'));
+        return;
+      }
+
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const img = new Image()
-        img.onload = () => resolve(img)
-        img.onerror = () => reject(new Error('Failed to load image'))
-        img.src = e.target.result
-      }
-      reader.onerror = () => reject(new Error('Failed to read file'))
-      reader.readAsDataURL(file)
-    })
-  }
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleBackgroundUpload = async (file) => {
     try {
-      const img = typeof file === 'object' ? await loadImage(file) : file
-      background.image = img
+      // Nếu file là đối tượng Image, sử dụng trực tiếp
+      // Nếu không, gọi loadImage để xử lý
+      const img = file instanceof HTMLImageElement ? file : await loadImage(file);
+
+      background.image = img;
 
       // Calculate scale to fit stage while maintaining aspect ratio
-      const containerSize = Math.min(stageConfig.width, stageConfig.height)
-      const scale = containerSize / Math.max(img.width, img.height)
+      const containerSize = Math.min(stageConfig.width, stageConfig.height);
+      const scale = containerSize / Math.max(img.width, img.height);
 
       // Center the frame
-      const x = (stageConfig.width - img.width * scale) / 2
-      const y = (stageConfig.height - img.height * scale) / 2
+      const x = (stageConfig.width - img.width * scale) / 2;
+      const y = (stageConfig.height - img.height * scale) / 2;
 
       background.config = {
         image: img,
@@ -154,19 +150,21 @@ export function useImageEditor() {
         scaleX: scale,
         scaleY: scale,
         listening: true // Enable interactions with frame
-      }
+      };
 
       // Update safe area to match frame size
-      safeArea.width = containerSize
-      safeArea.height = containerSize
-      safeArea.x = (stageConfig.width - containerSize) / 2
-      safeArea.y = (stageConfig.height - containerSize) / 2
+      safeArea.width = containerSize;
+      safeArea.height = containerSize;
+      safeArea.x = (stageConfig.width - containerSize) / 2;
+      safeArea.y = (stageConfig.height - containerSize) / 2;
+
+      return Promise.resolve(); // Đảm bảo trả về Promise
 
     } catch (error) {
-      console.error('Error loading frame:', error)
-      throw error
+      console.error('Error loading frame:', error);
+      throw error;
     }
-  }
+  };
 
   const handleAvatarUpload = async (file) => {
     try {
@@ -266,63 +264,101 @@ export function useImageEditor() {
     avatar.config.rotation = (avatar.config.rotation + rotation) % 360
   }
 
-  const handleExport = (format, stage) => {
-    if (!stage || !background.image || !avatar.image) return
+  const handleExport = (format, stageRef) => {
+    if (!stageRef) {
+      console.error('Stage reference is missing');
+      return;
+    }
 
-    // Create a temporary stage with Facebook avatar dimensions
-    const tempStage = new window.Konva.Stage({
-      container: 'temp-container',
-      width: FB_AVATAR_SIZE,
-      height: FB_AVATAR_SIZE
-    })
+    try {
+      // Lấy stage node
+      const stage = stageRef.getNode();
 
-    // Create a temporary layer
-    const tempLayer = new window.Konva.Layer()
-    tempStage.add(tempLayer)
+      // Tạo một bản sao tạm thời của stage để xuất hình ảnh
+      const tempStage = stage.clone();
 
-    // Clone and position the avatar
-    const avatarNode = stage.getNode().find('#avatar')[0]
-    const avatarClone = avatarNode.clone({
-      x: (avatarNode.x() - safeArea.x) * (FB_AVATAR_SIZE / safeArea.width),
-      y: (avatarNode.y() - safeArea.y) * (FB_AVATAR_SIZE / safeArea.height),
-      scaleX: avatarNode.scaleX() * (FB_AVATAR_SIZE / safeArea.width),
-      scaleY: avatarNode.scaleY() * (FB_AVATAR_SIZE / safeArea.height)
-    })
-    tempLayer.add(avatarClone)
+      // Tạo container tạm thời để render stage
+      const tempContainer = document.getElementById('temp-container');
+      if (!tempContainer) {
+        console.error('Temp container not found');
+        return;
+      }
 
-    // Add the frame on top
-    const frameNode = stage.getNode().find('#frame')[0]
-    const frameClone = frameNode.clone({
-      x: 0,
-      y: 0,
-      width: FB_AVATAR_SIZE,
-      height: FB_AVATAR_SIZE,
-      scaleX: 1,
-      scaleY: 1
-    })
-    tempLayer.add(frameClone)
+      // Đặt kích thước cho container tạm thời
+      tempContainer.style.width = `${stage.width()}px`;
+      tempContainer.style.height = `${stage.height()}px`;
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.visibility = 'hidden';
 
-    // Đảm bảo frame luôn ở trên cùng khi xuất ảnh
-    frameClone.moveToTop()
+      // Thêm stage tạm thời vào container
+      tempStage.container(tempContainer);
 
-    // Get data URL
-    const dataUrl = tempStage.toDataURL({
-      pixelRatio: 2,
-      mimeType: `image/${format}`,
-      quality: 1
-    })
+      // Lấy các node từ stage gốc
+      const avatarNode = stage.findOne('#avatar');
+      const frameNode = stage.findOne('#frame');
 
-    // Clean up
-    tempStage.destroy()
+      // Tạo layer mới cho stage tạm thời
+      const tempLayer = new Konva.Layer();
+      tempStage.add(tempLayer);
 
-    // Download
-    const link = document.createElement('a')
-    link.download = `avatar-with-frame.${format}`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+      // Nếu có avatar, thêm bản sao của nó vào layer tạm thời
+      if (avatarNode) {
+        const tempAvatar = avatarNode.clone({
+          id: 'avatar',
+          x: avatarNode.x(),
+          y: avatarNode.y(),
+          scaleX: avatarNode.scaleX(),
+          scaleY: avatarNode.scaleY(),
+          rotation: avatarNode.rotation(),
+          draggable: false,
+          listening: false
+        });
+        tempLayer.add(tempAvatar);
+      }
+
+      // Nếu có frame, thêm bản sao của nó vào layer tạm thời và đảm bảo nó ở trên cùng
+      if (frameNode) {
+        const tempFrame = frameNode.clone({
+          id: 'frame',
+          x: frameNode.x(),
+          y: frameNode.y(),
+          scaleX: frameNode.scaleX(),
+          scaleY: frameNode.scaleY(),
+          rotation: frameNode.rotation(),
+          draggable: false,
+          listening: false
+        });
+        tempLayer.add(tempFrame);
+        tempFrame.moveToTop();
+      }
+
+      // Render layer tạm thời
+      tempLayer.draw();
+
+      // Xuất hình ảnh từ stage tạm thời
+      const dataURL = tempStage.toDataURL({
+        pixelRatio: 2, // Tăng chất lượng hình ảnh
+        mimeType: format === 'png' ? 'image/png' : 'image/jpeg',
+        quality: 1
+      });
+
+      // Tạo link tải xuống
+      const link = document.createElement('a');
+      link.download = `avatar-frame-${new Date().getTime()}.${format}`;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Dọn dẹp
+      tempStage.destroy();
+
+      return dataURL;
+    } catch (error) {
+      console.error('Error exporting image:', error);
+      return null;
+    }
+  };
 
   // Selection handling
   const handleSelect = (nodeId) => {
@@ -350,169 +386,67 @@ export function useImageEditor() {
     }
   }
 
-  // Crop methods
-  const startCrop = (stage) => {
-    if (!avatar.image || !selectedId.value) return
-
-    cropMode.value = true
-    const node = stage.getNode().find(`#${selectedId.value}`)[0]
-    if (!node) return
-
-    // Set crop area to match the selected object's bounds
-    const nodeRect = node.getClientRect()
-
-    cropConfig.x = nodeRect.x
-    cropConfig.y = nodeRect.y
-    cropConfig.width = nodeRect.width
-    cropConfig.height = nodeRect.height
-    cropConfig.visible = true
-
-    // Hide the transformer while in crop mode
-    const transformer = stage.getNode().find('Transformer')[0]
-    if (transformer) {
-      transformer.visible(false)
-    }
-  }
-
-  const applyCrop = (stage) => {
-    if (!cropMode.value || !selectedId.value) return
-
-    const node = stage.getNode().find(`#${selectedId.value}`)[0]
-    const cropNode = stage.getNode().find('#crop')[0]
-    if (!node || !cropNode) return
-
-    // Create temporary canvas for cropping
-    const tempCanvas = document.createElement('canvas')
-    const ctx = tempCanvas.getContext('2d')
-
-    // Set canvas size to crop size
-    tempCanvas.width = cropConfig.width
-    tempCanvas.height = cropConfig.height
-
-    // Calculate the relative position and scale for cropping
-    const scaleX = node.scaleX()
-    const scaleY = node.scaleY()
-    const rotation = node.rotation()
-
-    // Save current node attributes
-    const nodeAttrs = {
-      x: node.x(),
-      y: node.y(),
-      scaleX: scaleX,
-      scaleY: scaleY,
-      rotation: rotation
-    }
-
-    // Reset node transformation temporarily
-    node.setAttrs({
-      x: 0,
-      y: 0,
-      scaleX: 1,
-      scaleY: 1,
-      rotation: 0
-    })
-
-    // Draw cropped portion
-    ctx.drawImage(
-      node.image(),
-      (cropConfig.x - nodeAttrs.x) / scaleX,
-      (cropConfig.y - nodeAttrs.y) / scaleY,
-      cropConfig.width / scaleX,
-      cropConfig.height / scaleY,
-      0,
-      0,
-      cropConfig.width,
-      cropConfig.height
-    )
-
-    // Create new image from cropped canvas
-    const croppedImage = new Image()
-    croppedImage.onload = () => {
-      if (selectedId.value === 'avatar') {
-        avatar.image = croppedImage
-        avatar.config = {
-          ...avatar.config,
-          image: croppedImage,
-          x: cropConfig.x,
-          y: cropConfig.y,
-          scaleX: 1,
-          scaleY: 1
-        }
-      }
-
-      // Reset crop mode
-      cropMode.value = false
-      cropConfig.visible = false
-
-      // Show transformer again
-      const transformer = stage.getNode().find('Transformer')[0]
-      if (transformer) {
-        transformer.visible(true)
-      }
-    }
-    croppedImage.src = tempCanvas.toDataURL()
-
-    // Restore node attributes
-    node.setAttrs(nodeAttrs)
-  }
-
-  const cancelCrop = () => {
-    cropMode.value = false
-    cropConfig.visible = false
-  }
-
-  const updateCropPosition = (node) => {
-    if (!node) return
-
-    cropConfig.x = node.x()
-    cropConfig.y = node.y()
-  }
-
-  const updateCropTransform = (node) => {
-    if (!node) return
-
-    cropConfig.width = node.width() * node.scaleX()
-    cropConfig.height = node.height() * node.scaleY()
-  }
-
   // Frame handling methods
   const handleSelectFrame = (frame) => {
     if (frame && frame.src) {
-      const img = new Image()
-      img.crossOrigin = 'Anonymous'
-      img.src = frame.src
+      console.log("Đang tải frame từ URL:", frame.src);
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
       img.onload = () => {
+        console.log("Frame đã tải thành công:", img.width, "x", img.height);
+        // Truyền trực tiếp đối tượng Image đã tải vào handleBackgroundUpload
+        // thay vì gọi loadImage lại
         handleBackgroundUpload(img)
-      }
+          .then(() => {
+            console.log("Background đã được cập nhật thành công");
+          })
+          .catch(err => {
+            console.error("Lỗi khi xử lý frame:", err);
+          });
+      };
+
       img.onerror = (err) => {
-        console.error('Error loading frame image:', err)
-      }
+        console.error("Lỗi khi tải frame:", err);
+      };
+
+      img.src = frame.src;
     }
-  }
+  };
 
   const handleFrameFromUrl = async (url) => {
     try {
-      const img = new Image()
-      img.crossOrigin = 'Anonymous'
-      img.src = url
-      img.onload = () => {
-        handleBackgroundUpload(img)
-      }
-      img.onerror = () => {
-        console.error('Error loading image from URL')
-      }
+      console.log("Đang tải frame từ URL:", url);
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          console.log("Frame đã tải thành công:", img.width, "x", img.height);
+          handleBackgroundUpload(img);
+          resolve();
+        };
+
+        img.onerror = (err) => {
+          console.error("Lỗi khi tải frame từ URL:", err);
+          reject(new Error("Không thể tải hình ảnh từ URL đã cung cấp"));
+        };
+
+        img.src = url;
+      });
     } catch (error) {
-      console.error('Error checking image URL:', error)
+      console.error("Lỗi khi kiểm tra URL hình ảnh:", error);
+      throw error;
     }
-  }
+  };
 
   return {
     stageConfig,
     background,
     avatar,
     safeArea,
-    cropMode,
-    cropConfig,
     selectedId,
     transformerConfig,
     avatarScale,
@@ -528,11 +462,6 @@ export function useImageEditor() {
     handleSelect,
     handleStageClick,
     updateImageStyles,
-    startCrop,
-    applyCrop,
-    cancelCrop,
-    updateCropPosition,
-    updateCropTransform,
     handleSelectFrame,
     handleFrameFromUrl
   }

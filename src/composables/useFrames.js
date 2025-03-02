@@ -5,30 +5,30 @@ export function useFrames() {
   const sampleFrames = [
     {
       id: 'frame1',
-      name: 'Facebook Profile',
-      thumbnail: 'https://i.imgur.com/59BflFY.jpeg',
-      src: 'https://i.imgur.com/59BflFY.jpeg',
+      name: 'Summer Frame',
+      thumbnail: 'https://i.imgur.com/Rew8ydu.png',
+      src: 'https://i.imgur.com/Rew8ydu.png',
       category: 'social'
     },
     {
       id: 'frame2',
       name: 'Business Card',
-      thumbnail: 'https://drive.google.com/file/d/1jRD_7EUNEKVcQThBk4zDRUdOgd28Cgkr/view?usp=drive_link',
-      src: 'https://drive.google.com/file/d/1jRD_7EUNEKVcQThBk4zDRUdOgd28Cgkr/view?usp=drive_link',
+      thumbnail: 'https://i.imgur.com/Rew8ydu.png',
+      src: 'https://i.imgur.com/Rew8ydu.png',
       category: 'business'
     },
     {
       id: 'frame3',
       name: 'Personal Avatar',
-      thumbnail: 'https://via.placeholder.com/150/6366f1/ffffff?text=AVA',
-      src: 'https://via.placeholder.com/800/6366f1/ffffff?text=Personal+Frame',
+      thumbnail: 'https://i.imgur.com/Rew8ydu.png',
+      src: 'https://i.imgur.com/Rew8ydu.png',
       category: 'personal'
     },
     {
       id: 'frame4',
       name: 'Event Badge',
-      thumbnail: 'https://via.placeholder.com/150/be123c/ffffff?text=EVT',
-      src: 'https://via.placeholder.com/800/be123c/ffffff?text=Event+Frame',
+      thumbnail: 'https://i.imgur.com/Rew8ydu.png',
+      src: 'https://i.imgur.com/Rew8ydu.png',
       category: 'events'
     },
     {

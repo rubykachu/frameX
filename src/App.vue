@@ -1,22 +1,20 @@
 <template>
-  <div class="min-h-screen bg-background flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <Header />
 
     <main class="container mx-auto px-4 py-8 flex-1">
-      <div class="flex flex-row gap-6 h-full">
-        <!-- Sidebar -->
+      <!-- Nội dung chính -->
+      <div class="flex flex-col md:flex-row gap-6">
         <Sidebar
           @select-frame="handleSelectFrame"
           @upload-frame="handleFrameUpload"
-          @load-from-url="handleFrameFromUrl"
         />
 
-        <!-- Editor Container -->
         <ImageEditor
-          ref="imageEditor"
-          @frame-selected="onFrameSelected"
-          @avatar-uploaded="onAvatarUploaded"
-          @export-complete="onExportComplete"
+          ref="editorRef"
+          :initial-frame="initialFrame"
+          @frame-selected="handleFrameSelected"
+          @avatar-uploaded="handleAvatarUploaded"
         />
       </div>
     </main>
@@ -32,32 +30,26 @@ import Footer from './components/layout/Footer.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import ImageEditor from './components/editor/ImageEditor.vue'
 
-// Refs
-const imageEditor = ref(null)
+const editorRef = ref(null)
+const initialFrame = ref(null)
 
-// Event handlers
+// Các phương thức xử lý
 const handleSelectFrame = (frame) => {
-  imageEditor.value?.handleSelectFrame(frame)
+  console.log("App: Frame đã được chọn:", frame);
+  editorRef.value?.handleSelectFrame(frame)
 }
 
 const handleFrameUpload = (file) => {
-  imageEditor.value?.handleFrameUpload(file)
+  console.log("App: Frame đã được upload:", file.name);
+  editorRef.value?.handleFrameUpload(file)
 }
 
-const handleFrameFromUrl = (url) => {
-  imageEditor.value?.handleFrameFromUrl(url)
-}
-
-const onFrameSelected = (frame) => {
+const handleFrameSelected = (frame) => {
   console.log('Frame selected:', frame)
 }
 
-const onAvatarUploaded = (file) => {
+const handleAvatarUploaded = (file) => {
   console.log('Avatar uploaded:', file.name)
-}
-
-const onExportComplete = (format) => {
-  console.log('Export completed in format:', format)
 }
 </script>
 
@@ -100,11 +92,6 @@ input[type="range"]::-webkit-slider-thumb {
 
 input[type="range"]::-moz-range-thumb {
   @apply ring-4 ring-teal-200;
-}
-
-/* Disable avatar dragging during crop */
-.crop-mode .avatar {
-  pointer-events: none;
 }
 
 /* Container styles */
