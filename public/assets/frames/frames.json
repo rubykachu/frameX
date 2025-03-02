@@ -1,0 +1,97 @@
+{
+  "categories": [
+    { "id": "all", "name": "All Frames" },
+    { "id": "holidays", "name": "Holidays" },
+    { "id": "business", "name": "Business" },
+    { "id": "social", "name": "Social Media" },
+    { "id": "personal", "name": "Personal" },
+    { "id": "events", "name": "Events" },
+    { "id": "decorative", "name": "Decorative" }
+  ],
+  "frames": [
+    {
+      "id": "frame1",
+      "name": "Social Frame",
+      "thumbnail": "https://i.imgur.com/XiOnbVa.png",
+      "src": "https://i.imgur.com/XiOnbVa.png",
+      "category": "social"
+    },
+    {
+      "id": "frame2",
+      "name": "Business Frame",
+      "thumbnail": "https://i.imgur.com/KA3xsmR.jpg",
+      "src": "https://i.imgur.com/KA3xsmR.jpg",
+      "category": "business"
+    },
+    {
+      "id": "frame3",
+      "name": "Personal Frame",
+      "thumbnail": "https://i.imgur.com/0r1X0Fo.png",
+      "src": "https://i.imgur.com/0r1X0Fo.png",
+      "category": "personal"
+    },
+    {
+      "id": "local-frame1",
+      "name": "Best Summer Frame",
+      "thumbnail": "frame-best-summer.png",
+      "src": "frame-best-summer.png",
+      "category": "holidays"
+    },
+    {
+      "id": "holiday-christmas",
+      "name": "Christmas Frame",
+      "thumbnail": "christmas.png",
+      "src": "christmas.png",
+      "category": "holidays"
+    },
+    {
+      "id": "holiday-newyear",
+      "name": "New Year Frame",
+      "thumbnail": "newyear.png",
+      "src": "newyear.png",
+      "category": "holidays"
+    },
+    {
+      "id": "business-corporate",
+      "name": "Corporate Frame",
+      "thumbnail": "corporate.png",
+      "src": "corporate.png",
+      "category": "business"
+    },
+    {
+      "id": "business-professional",
+      "name": "Professional Frame",
+      "thumbnail": "professional.png",
+      "src": "professional.png",
+      "category": "business"
+    },
+    {
+      "id": "social-instagram",
+      "name": "Instagram Frame",
+      "thumbnail": "instagram.png",
+      "src": "instagram.png",
+      "category": "social"
+    },
+    {
+      "id": "personal-birthday",
+      "name": "Birthday Frame",
+      "thumbnail": "birthday.png",
+      "src": "birthday.png",
+      "category": "personal"
+    },
+    {
+      "id": "events-wedding",
+      "name": "Wedding Frame",
+      "thumbnail": "wedding.png",
+      "src": "wedding.png",
+      "category": "events"
+    },
+    {
+      "id": "decorative-floral",
+      "name": "Floral Frame",
+      "thumbnail": "floral.png",
+      "src": "floral.png",
+      "category": "decorative"
+    }
+  ]
+}

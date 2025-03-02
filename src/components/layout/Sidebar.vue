@@ -128,16 +128,8 @@ import { ref, computed, onMounted } from 'vue';
 // Emits
 const emit = defineEmits(['select-frame', 'upload-frame']);
 
-// Categories
-const categories = ref([
-  { id: 'all', name: 'All Frames' },
-  { id: 'holidays', name: 'Holidays' },
-  { id: 'business', name: 'Business' },
-  { id: 'social', name: 'Social Media' },
-  { id: 'personal', name: 'Personal' },
-  { id: 'events', name: 'Events' },
-  { id: 'decorative', name: 'Decorative' }
-]);
+// Categories - initialize as empty array, will be loaded from JSON
+const categories = ref([]);
 
 const showAllCategories = ref(false);
 const selectedCategory = ref('all');
@@ -146,27 +138,23 @@ const displayedCategories = computed(() => {
   return showAllCategories.value ? categories.value : categories.value.slice(0, 3);
 });
 
-// Cập nhật mảng frames với URL Imgur thực tế
-const frames = ref([
-  {
-    id: 'frame1',
-    thumbnail: 'https://i.imgur.com/XiOnbVa.png',
-    src: 'https://i.imgur.com/XiOnbVa.png',
-    category: 'social'
-  },
-  {
-    id: 'frame2',
-    thumbnail: 'https://i.imgur.com/KA3xsmR.jpg',
-    src: 'https://i.imgur.com/KA3xsmR.jpg',
-    category: 'business'
-  },
-  {
-    id: 'frame3',
-    thumbnail: 'https://i.imgur.com/0r1X0Fo.png',
-    src: 'https://i.imgur.com/0r1X0Fo.png',
-    category: 'personal'
+/**
+ * Helper function to get the correct path for frame images
+ * @param {string} path - The image path or URL
+ * @returns {string} - The complete path or URL
+ */
+function getFramePath(path) {
+  // If it's a URL (starts with http or https), return it as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
   }
-]);
+
+  // Otherwise, it's a local path - prepend with the base URL
+  return `/assets/frames/${path}`;
+}
+
+// Initialize empty frames array
+const frames = ref([]);
 
 const selectedFrameId = ref(null);
 const showPreview = ref(false);
@@ -191,7 +179,8 @@ const selectFrame = (frame) => {
 };
 
 const previewFrame = (frame) => {
-  previewFrameUrl.value = frame.thumbnail || frame.src;
+  // Use the correct source based on whether it's a remote or local frame
+  previewFrameUrl.value = frame.src;
   previewingFrame.value = frame;
   showPreview.value = true;
 };
@@ -236,10 +225,36 @@ const selectAndClosePreview = () => {
   }
 };
 
-// Fetch frames data
+// Fetch frames and categories data
 onMounted(() => {
-  // In a real app, you would fetch frames from an API here
-  // frames.value = await fetchFrames();
+  // Load frames and categories from the JSON file
+  async function loadData() {
+    try {
+      const response = await fetch('/assets/frames/frames.json');
+      const data = await response.json();
+
+      // Set categories
+      categories.value = data.categories || [];
+
+      // Default to 'all' category
+      selectedCategory.value = 'all';
+
+      // Process each frame to add the correct path and determine if it's remote
+      const processedFrames = (data.frames || []).map(frame => ({
+        ...frame,
+        thumbnail: getFramePath(frame.thumbnail),
+        src: getFramePath(frame.src),
+        isRemote: frame.thumbnail.startsWith('http://') || frame.thumbnail.startsWith('https://')
+      }));
+
+      // Set the frames
+      frames.value = processedFrames;
+    } catch (error) {
+      console.error('Error loading frames and categories:', error);
+    }
+  }
+
+  loadData();
 });
 </script>
 
