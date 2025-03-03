@@ -7,6 +7,38 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# Không redirect các file tĩnh cần thiết cho SEO
+[[redirects]]
+  from = "/*.jpg"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.png"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.svg"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+  force = true
+
+# Redirect tất cả các URL khác về index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
