@@ -1,8 +1,8 @@
 <template>
   <!-- Layout Container -->
-  <div class="flex gap-4 h-full" ref="editorContainer">
+  <div class="flex flex-col lg:flex-row gap-4 h-full" ref="editorContainer">
     <!-- Canvas Area -->
-    <div class="relative aspect-square bg-gray-100 rounded-lg flex-1 border border-gray-100">
+    <div class="relative aspect-square bg-gray-100 rounded-lg w-full lg:flex-1 border border-gray-100">
       <div class="absolute inset-0" ref="stageContainer">
         <v-stage
           ref="stage"
@@ -193,8 +193,7 @@
     </div>
 
     <!-- Layer Panel -->
-    <!-- <div class="w-64 bg-white rounded-lg p-4 border border-gray-200 layer-panel"> -->
-    <div class="w-64 bg-white border border-gray-200 rounded-lg layer-panel">
+    <div class="w-full lg:w-64 bg-white border border-gray-200 rounded-lg layer-panel">
       <div class="p-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-800">Layers</h2>
       </div>
@@ -417,9 +416,9 @@ const handleDragStart = (e) => {
   target.setAttr('dragging', true);
   target.getLayer().batchDraw();
 
-  console.log(`Started dragging ${id}:`, {
-    position: { x: target.x(), y: target.y() }
-  });
+  // console.log(`Started dragging ${id}:`, {
+    // position: { x: target.x(), y: target.y() }
+  // });
 }
 
 const handleDragMove = (type) => {
@@ -462,7 +461,7 @@ const handleDragMove = (type) => {
 const handleTransformStart = (e) => {
   // Đánh dấu bắt đầu biến đổi (scale/rotate)
   const id = e.target.id()
-  console.log(`Started transforming ${id}`)
+  // console.log(`Started transforming ${id}`)
 }
 
 const updatePosition = (type) => {
@@ -667,7 +666,7 @@ defineExpose({
 <style scoped>
 /* Cải thiện trải nghiệm kéo thả */
 .v-stage {
-  touch-action: none; /* Ngăn chặn hành vi mặc định của trình duyệt trên thiết bị cảm ứng */
+  touch-action: none;
 }
 
 /* Cursor khi hover lên avatar */
@@ -684,17 +683,36 @@ defineExpose({
   filter: brightness(1.05);
 }
 
-/* Cải thiện hiển thị trên thiết bị di động */
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .layer-panel {
+    order: -1; /* Move layer panel to top on mobile */
+    margin-bottom: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .v-stage {
     width: 100% !important;
     height: auto !important;
   }
+
+  .step-indicator {
+    transform: scale(0.9);
+  }
+
+  .layer-panel {
+    padding: 0.5rem;
+  }
 }
 
-/* Thêm class cho layer panel để dễ select */
-.layer-panel {
-  position: relative;
-  z-index: 10;
+@media (max-width: 480px) {
+  .step-indicator {
+    transform: scale(0.8);
+  }
+
+  .layer-panel {
+    padding: 0.25rem;
+  }
 }
 </style>

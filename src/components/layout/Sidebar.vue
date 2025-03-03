@@ -2,7 +2,7 @@
   <aside class="bg-white border border-gray-200 rounded-lg flex flex-col h-full">
     <!-- Header -->
     <div class="p-4 border-b border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-800">Frame Galleries</h2>
+      <h2 class="text-lg font-semibold text-gray-800">Frames</h2>
     </div>
 
     <!-- Scrollable Content Area -->

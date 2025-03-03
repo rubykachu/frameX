@@ -215,9 +215,9 @@ export function useImageEditor() {
     target.config.x = node.x()
     target.config.y = node.y()
 
-    console.log(`${type} position updated:`, {
-      to: { x: target.config.x, y: target.config.y }
-    })
+    // console.log(`${type} position updated:`, {
+    //   to: { x: target.config.x, y: target.config.y }
+    // })
   }
 
   const updateTransform = (type, node) => {
@@ -433,18 +433,18 @@ export function useImageEditor() {
   // Frame handling methods
   const handleSelectFrame = (frame) => {
     if (frame && frame.src) {
-      console.log("Đang tải frame từ URL:", frame.src);
+      // console.log("Đang tải frame từ URL:", frame.src);
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
 
       img.onload = () => {
-        console.log("Frame đã tải thành công:", img.width, "x", img.height);
+        // console.log("Frame đã tải thành công:", img.width, "x", img.height);
         // Truyền trực tiếp đối tượng Image đã tải vào handleBackgroundUpload
         // thay vì gọi loadImage lại
         handleBackgroundUpload(img)
           .then(() => {
-            console.log("Background đã được cập nhật thành công");
+            // console.log("Background đã được cập nhật thành công");
           })
           .catch(err => {
             console.error("Lỗi khi xử lý frame:", err);
@@ -461,14 +461,14 @@ export function useImageEditor() {
 
   const handleFrameFromUrl = async (url) => {
     try {
-      console.log("Đang tải frame từ URL:", url);
+      // console.log("Đang tải frame từ URL:", url);
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
 
       return new Promise((resolve, reject) => {
         img.onload = () => {
-          console.log("Frame đã tải thành công:", img.width, "x", img.height);
+          // console.log("Frame đã tải thành công:", img.width, "x", img.height);
           handleBackgroundUpload(img);
           resolve();
         };
@@ -494,7 +494,7 @@ export function useImageEditor() {
     if (typeof order.frame === 'number') layerOrder.frame = order.frame;
     if (typeof order.avatar === 'number') layerOrder.avatar = order.avatar;
 
-    console.log('Layer order updated:', layerOrder);
+    // console.log('Layer order updated:', layerOrder);
   }
 
   return {

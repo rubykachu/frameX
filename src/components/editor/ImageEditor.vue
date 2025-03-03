@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 h-full">
+  <div class="flex-1 h-full flex flex-col">
     <!-- Avatar Canvas -->
     <AvatarCanvas
       ref="canvasRef"
@@ -17,7 +17,7 @@
       @layer-order-change="handleLayerOrderChange"
     />
 
-    <!-- Editor Controls -->
+    <!-- Editor Controls - Moved inside the component -->
     <EditorControls
       :avatar="editor.avatar"
       :background="editor.background"
@@ -78,11 +78,11 @@ const handleUpdateTransform = (type, node) => {
 }
 
 const handleLayerVisibilityChange = ({ type, visible }) => {
-  console.log(`Layer ${type} visibility changed to ${visible}`)
+  // console.log(`Layer ${type} visibility changed to ${visible}`)
 }
 
 const handleLayerOrderChange = (order) => {
-  console.log(`Layer order changed to:`, order)
+  // console.log(`Layer order changed to:`, order)
   editor.updateLayerOrder(order)
 }
 
@@ -160,3 +160,10 @@ defineExpose({
   handleFrameFromUrl
 })
 </script>
+
+<style scoped>
+/* Ensure the component takes full height and displays controls at bottom */
+:deep(.v-stage) {
+  flex: 1;
+}
+</style>
