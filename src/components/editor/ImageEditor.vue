@@ -78,11 +78,11 @@ const handleUpdateTransform = (type, node) => {
 }
 
 const handleLayerVisibilityChange = ({ type, visible }) => {
-  console.log(`Layer ${type} visibility changed to ${visible}`)
+  // console.log(`Layer ${type} visibility changed to ${visible}`)
 }
 
 const handleLayerOrderChange = (order) => {
-  console.log(`Layer order changed to:`, order)
+  // console.log(`Layer order changed to:`, order)
   editor.updateLayerOrder(order)
 }
 

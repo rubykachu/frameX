@@ -416,9 +416,9 @@ const handleDragStart = (e) => {
   target.setAttr('dragging', true);
   target.getLayer().batchDraw();
 
-  console.log(`Started dragging ${id}:`, {
-    position: { x: target.x(), y: target.y() }
-  });
+  // console.log(`Started dragging ${id}:`, {
+    // position: { x: target.x(), y: target.y() }
+  // });
 }
 
 const handleDragMove = (type) => {
@@ -461,7 +461,7 @@ const handleDragMove = (type) => {
 const handleTransformStart = (e) => {
   // Đánh dấu bắt đầu biến đổi (scale/rotate)
   const id = e.target.id()
-  console.log(`Started transforming ${id}`)
+  // console.log(`Started transforming ${id}`)
 }
 
 const updatePosition = (type) => {

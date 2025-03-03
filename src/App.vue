@@ -41,21 +41,21 @@ const initialFrame = ref(null)
 
 // Các phương thức xử lý
 const handleSelectFrame = (frame) => {
-  console.log("App: Frame đã được chọn:", frame);
+  // console.log("App: Frame đã được chọn:", frame);
   editorRef.value?.handleSelectFrame(frame)
 }
 
 const handleFrameUpload = (file) => {
-  console.log("App: Frame đã được upload:", file.name);
+  // console.log("App: Frame đã được upload:", file.name);
   editorRef.value?.handleFrameUpload(file)
 }
 
 const handleFrameSelected = (frame) => {
-  console.log('Frame selected:', frame)
+  // console.log('Frame selected:', frame)
 }
 
 const handleAvatarUploaded = (file) => {
-  console.log('Avatar uploaded:', file.name)
+  // console.log('Avatar uploaded:', file.name)
 }
 </script>
 
