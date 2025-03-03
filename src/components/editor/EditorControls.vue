@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white p-4 flex">
+  <div class="bg-white p-4 pt-8 flex" v-if="hasAvatarAndFrame">
     <!-- Check if there is an avatar and background -->
     <div v-if="hasAvatarAndFrame" class="flex space-x-4">
       <!-- Display buttons -->
